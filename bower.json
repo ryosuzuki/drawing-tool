@@ -25,6 +25,8 @@
     "numericjs": "~1.2.6",
     "vectorious": "~4.1.4",
     "paper": "~0.9.25",
-    "lodash": "~4.3.0"
+    "lodash": "~4.3.0",
+    "victor": "~1.1.0",
+    "mousetrap": "~1.5.3"
   }
 }

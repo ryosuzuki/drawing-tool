@@ -5,6 +5,7 @@ var start;
 var end;
 var lines = [];
 var points = [];
+var paths = [];
 
 var pathStyle = {
   strokeColor: 'black',
@@ -15,94 +16,103 @@ var pathStyle = {
 window.onload = function () {
   paper.setup('canvas');
 
-  var path;
+  var draft;
   var tool = new Tool();
   tool.onMouseDown = function (event) {
-    if (path) {
-      path.selected = false;
+    if (draft) {
+      draft.selected = false;
     }
-    path = new Path(pathStyle);
-    path.segments = [event.point];
+    draft = new Path(pathStyle);
+    draft.segments = [event.point];
     start = event.point;
   }
 
   tool.onMouseDrag = function (event) {
-    path.add(event.point);
+    draft.add(event.point);
   }
 
   tool.onMouseUp = function(event) {
-    var segmentCount = path.segments.length;
-    path.simplify(10);
-    var newSegmentCount = path.segments.length;
+    var segmentCount = draft.segments.length;
+    draft.simplify(10);
+    var newSegmentCount = draft.segments.length;
     var difference = segmentCount - newSegmentCount;
     var percentage = 100 - Math.round(newSegmentCount / segmentCount * 100);
 
     end = event.point;
-    path.remove();
+    draft.remove();
 
-    var line = new Path(pathStyle);
+    var path = new Path(pathStyle);
     points = [];
     if (!lines.length) {
-      line.add(new Point(start.x, start.y));
-      line.add(new Point(end.x, end.y));
+      path.add(new Point(start.x, start.y));
+      path.add(new Point(end.x, end.y));
     } else {
-      var sp;
-      var ep;
       var smin = Math.pow(10, 10);
       var emin = Math.pow(10, 10);
       var si;
       var ei;
+      var sn;
+      var en;
       for (var i=0; i<lines.length; i++) {
         var m = [distance(start, lines[i].start), distance(start, lines[i].end)];
         if (_.min(m) < 30 && _.min(m) < smin) {
-          si = { i: i, t: m.indexOf(_.min(m)) == 0 ? 'start' : 'end' }
+          si = { i: i, t: m.indexOf(_.min(m)) == 0 ? 'start' : 'end' };
+          sn = new Victor(lines[i].end.x-lines[i].start.x, lines[i].end.y-lines[i].start.y).normalize();
         }
         var m = [distance(end, lines[i].start), distance(end, lines[i].end)];
         if (_.min(m) < 30 && _.min(m) < emin) {
-          ei = { i: i, t: m.indexOf(_.min(m)) == 0 ? 'start' : 'end' }
+          ei = { i: i, t: m.indexOf(_.min(m)) == 0 ? 'start' : 'end' };
+          en = new Victor(lines[i].end.x-lines[i].start.x, lines[i].end.y-lines[i].start.y).normalize();
         }
       }
       console.log(si);
-      line.add(si ? lines[si.i][si.t] : new Point(start.x, start.y));
-      line.add(ei ? lines[ei.i][ei.t] : new Point(end.x, end.y));
+      var sp = si ? lines[si.i][si.t] : new Point(start.x, start.y);
+      var ep = ei ? lines[ei.i][ei.t] : new Point(end.x, end.y);
+      var vec = new Victor(ep.x-sp.x, ep.y-sp.y);
+      var normal = vec.clone().normalize();
+      if (sn) {
+        var dot = normal.dot(sn);
+        console.log(dot);
+        if (dot < 0.1 && dot > -0.1) {
+          var d = sn.rotate(Math.PI/2).multiplyScalar(vec.length());
+          d = d.dot(normal) >= 0 ? d : d.multiplyScalar(-1);
+          var p = new Victor(sp.x, sp.y).add(d);
+          ep = new Point(p.x, p.y);
+        }
+      }
+      if (en) {
+        var dot = normal.dot(en);
+        console.log(dot);
+        if (dot < 0.1 && dot > -0.1) {
+          var d = en.rotate(Math.PI/2).multiplyScalar(vec.length());
+          d = d.dot(normal) < 0 ? d : d.multiplyScalar(-1);
+          var p = new Victor(ep.x, ep.y).add(d);
+          sp = new Point(p.x, p.y);
+        }
+      }
+      path.add(sp);
+      path.add(ep);
     }
     console.log(points);
+    paths.push(path);
     lines.push({
-      start: _.first(line.segments).point,
-      end:   _.last(line.segments).point,
+      start: _.first(path.segments).point,
+      end:   _.last(path.segments).point,
     });
-
-    // var line = new Path(pathStyle);
-    // if (!points.length) {
-    //   line.add(new Point(start.x, start.y));
-    //   line.add(new Point(end.x, end.y));
-    // } else {
-    //   var min = _.min(points);
-    //   var index = points.indexOf(min);
-
-    //   var i = Math.floor(index/4);
-    //   var p = (index%2 == 0) ? 'start' : 'end';
-    //   if (index%4 < 2) {
-    //     line.add(lines[i][p]);
-    //     line.add(end);
-    //   } else {
-    //     line.add(start);
-    //     line.add(lines[i][p]);
-    //   }
-    //   // 0 -> start - lines[0].start
-    //   // 1 -> start - lines[0].end
-    //   // 2 -> end   - lines[0].start
-    //   // 3 -> end   - lines[0].end
-    //   // 4 -> start - lines[1].start
-    //   // 5 -> start - lines[1].end
-    //   // 6 -> end   - lines[1].start
-    //   // 7 -> end   - lines[1].end
-    //   // ...
-
-    // }
-
   }
+}
 
+Mousetrap.bind('command+z', function() {
+  undo();
+});
+
+function undo () {
+  _.last(paths).remove();
+  paths.pop()
+}
+
+function dot (v1, v2) {
+  return v1.x*v2.x + v1.y+v2.y;
 }
 
 function distance (p1, p2) {
