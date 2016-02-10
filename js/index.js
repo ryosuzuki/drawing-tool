@@ -1,45 +1,37 @@
-paper.install(window);
-// Keep global references to both tools, so the HTML
-// links below can access them.
-var lineTool, cloudTool, selected = 'lineTool', User = {}, userId = '';
+var path;
 
-window.onload = function() {
-  paper.setup('draw');
+var textItem = new PointText({
+  content: 'Click and drag to draw a line.',
+  point: new Point(20, 30),
+  fillColor: 'black',
+});
 
-  var group = new Group();
-  pathStyle = {
-    strokeColor: '#63d4ff',
-    strokeWidth: 5
-  };
+function onMouseDown(event) {
+  if (path) {
+    path.selected = false;
+  }
 
-  var points = [];
-  var path;
-  var onMouseDown = function(event) {
-    path = new Path();
-    path.style = pathStyle;
+  path = new Path({
+    segments: [event.point],
+    strokeColor: 'black',
+    strokeWidth: 5,
+    // fullySelected: true
+  });
+}
 
-    path.add(event.point);
-    group.addChild(path);
-    points.push(event.point.x +'|'+ event.point.y);
-  };
 
-  var onMouseUp = function(event) {
-    path.simplify(10);
-    points.push(event.point.x +'|'+ event.point.y);
-    points.length = 0;
-  };
+function onMouseDrag(event) {
+  path.add(event.point);
+  textItem.content = 'Segment count: ' + path.segments.length;
+}
 
-  lineTool = new Tool();
-  lineTool.onMouseDown  = onMouseDown;
-  lineTool.onMouseUp    = onMouseUp;
-
-  lineTool.onMouseDrag = function(event) {
-    if(typeof path == 'undefined'){
-      path = new Path();
-    }
-    path.add(event.point);
-    points.push(event.point.x +'|'+ event.point.y);
-  };
-
+function onMouseUp(event) {
+  var segmentCount = path.segments.length;
+  path.simplify(10);
+  // path.fullySelected = true;
+  var newSegmentCount = path.segments.length;
+  var difference = segmentCount - newSegmentCount;
+  var percentage = 100 - Math.round(newSegmentCount / segmentCount * 100);
+  textItem.content = difference + ' of the ' + segmentCount + ' segments were removed. Saving ' + percentage + '%';
 
 }
