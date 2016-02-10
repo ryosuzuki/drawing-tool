@@ -24,23 +24,9 @@ app.use( function *(next) {
   yield next;
 });
 app.use(route.get('/', index));
-app.use(route.get('/favicon.ico', null));
-app.use(route.get('/:id', show));
-app.use(route.post('/save', save));
 
 function *index() {
   this.body = yield this.render('index');
-}
-function *show(id) {
-  this.body = yield this.render(id)
-}
-function *save() {
-  console.log(this.request);
-  console.log(this.request.body);
-  var json = JSON.stringify(this.request.body);
-
-  fs.writeFileSync('hoge.json', json, 'utf8')
-
 }
 
 app.listen(port);

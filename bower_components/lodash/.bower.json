@@ -1,14 +1,15 @@
 {
   "name": "lodash",
   "homepage": "https://github.com/lodash/lodash",
-  "version": "3.10.3-npm-packages",
-  "_release": "3.10.3-npm-packages",
+  "version": "4.3.0",
+  "_release": "4.3.0",
   "_resolution": {
     "type": "version",
-    "tag": "3.10.3-npm-packages",
-    "commit": "785ed31b825dcf36b77782fd1b1a605ef64d0710"
+    "tag": "4.3.0",
+    "commit": "120daaacd3355833262a82e9b40930469f73cacb"
   },
   "_source": "git://github.com/lodash/lodash.git",
-  "_target": "~3.10.1",
-  "_originalSource": "lodash"
+  "_target": "~4.3.0",
+  "_originalSource": "lodash",
+  "_direct": true
 }
