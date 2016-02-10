@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html ng-app="app" ng-class="{ contentLoading: loading }">
+  <meta charset="UTF-8">
+  <head>
+    <title>Vizq</title>
+    <link rel="stylesheet" href="/bower_components/semantic-ui/dist/semantic.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="shortcut icon" href="/assets/favicon.ico">
+  </head>
+  <body>
+    <script src="/bower_components/jquery/dist/jquery.js"></script>
+    <script src="/bower_components/semantic-ui/dist/semantic.js"></script>
+    <script src="/bower_components/d3/d3.js"></script>
+    <script src="/bower_components/lodash/lodash.js"></script>
+    <script src="/bower_components/FileSaver.js/FileSaver.js"></script>
+    <script src="/bower_components/paper/dist/paper-full.js"></script>
+    <script src="/bower_components/numericjs/src/numeric.js"></script>
+    {% block main %}{% endblock %}
+  </body>
+
+</html>
+
+

@@ -1,0 +1,30 @@
+{
+  "name": "drawing-tool",
+  "version": "0.0.0",
+  "homepage": "https://github.com/ryosuzuki/drawing-tool",
+  "authors": [
+    "Ryo Suzuki <ryosuzk@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.4.6",
+    "jquery": "~2.1.4",
+    "semantic-ui": "~2.1.4",
+    "lodash": "~3.10.1",
+    "snap.svg": "~0.4.1",
+    "snap.svg.zpd": "~0.0.10",
+    "d3": "~3.5.14",
+    "svg.js": "~2.2.2",
+    "svg.import.js": "~1.0.1",
+    "numericjs": "~1.2.6",
+    "vectorious": "~4.1.4",
+    "paper": "~0.9.25"
+  }
+}
