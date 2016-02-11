@@ -1,9 +1,80 @@
+
+paper.install(window);
+
+var start;
+var end;
+var lines = [];
+var points = [];
+var paths = [];
+
+var pathStyle = {
+  strokeColor: 'black',
+  strokeWidth: 5,
+  fullySelected: false
+}
+
+
+
 var vid = document.getElementById('videoel');
 var overlay = document.getElementById('overlay');
 var overlayCC = overlay.getContext('2d');
 
 var ctrack = new clm.tracker({useWebGL : true});
 ctrack.init(pModel);
+var origin;
+
+
+window.onload = function () {
+  paper.setup('canvas');
+
+  var draft;
+  var tool = new Tool();
+  tool.onMouseDown = function (event) {
+    if (draft) {
+      draft.selected = false;
+    }
+    draft = new Path(pathStyle);
+    draft.segments = [event.point];
+    start = event.point;
+  }
+
+  tool.onMouseDrag = function (event) {
+    draft.add(event.point);
+  }
+
+  tool.onMouseUp = function (event) {
+    var segmentCount = draft.segments.length;
+    draft.simplify(10);
+    var newSegmentCount = draft.segments.length;
+    var difference = segmentCount - newSegmentCount;
+    var percentage = 100 - Math.round(newSegmentCount / segmentCount * 100);
+
+    end = event.point;
+    draft.remove();
+
+    var path = new Path(pathStyle);
+    points = [];
+    path.add(new Point(start.x, start.y));
+    path.add(new Point(end.x, end.y));
+    paths.push(path);
+  }
+
+  view.onFrame = function (event) {
+    var pos = ctrack.getCurrentPosition();
+    if (paths[0] && origin && pos) {
+      paths[0].segments[0].point.y = start.y + pos[19][1] - origin[19][1];
+      paths[0].segments[1].point.y = end.y + pos[22][1] - origin[22][1];
+    }
+    if (paths[1] && origin && pos) {
+      paths[1].segments[0].point.y = start.y + pos[18][1] - origin[18][1];
+      paths[1].segments[1].point.y = end.y + pos[15][1] - origin[15][1];
+    }
+
+  }
+  paper.view.draw();
+}
+
+
 
 function enablestart() {
   var startbutton = document.getElementById('startbutton');
@@ -73,7 +144,9 @@ function drawLoop() {
   overlayCC.clearRect(0, 0, 400, 300);
   //psrElement.innerHTML = "score :" + ctrack.getScore().toFixed(4);
   if (ctrack.getCurrentPosition()) {
+    if (!origin) origin = ctrack.getCurrentPosition();
     ctrack.draw(overlay);
+
   }
 }
 
