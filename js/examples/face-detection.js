@@ -131,6 +131,7 @@ vid.addEventListener('canplay', enablestart, false);
 function startVideo() {
   // start video
   vid.play();
+  $('#container').show();
   // start tracking
   ctrack.start(vid);
   // start loop to draw face

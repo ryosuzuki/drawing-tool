@@ -56,7 +56,7 @@ window.onload = function () {
       var angle = pv.getAngleInRadians(nv);
       total += angle;
     }
-    console.log(total);
+    // console.log(total);
 
     if (total < 1) {
       var from = new Point(draft.segments[0].point);
@@ -86,6 +86,7 @@ window.onload = function () {
       );
       var path = new Path.Ellipse(rectangle);
       path.style = pathStyle;
+
       circles.push(path);
       console.log('circle');
     }
@@ -95,6 +96,26 @@ window.onload = function () {
   view.onFrame = function (event) {
     var pos = ctrack.getCurrentPosition();
 
+    if (origin && pos) {
+      for (var key in face) {
+        var object = face[key];
+        if (!object) continue;
+        var index = 41;
+        if (key == 'leftBrow') index = 20;
+        if (key == 'rightBrow') index = 17;
+        if (key == 'leftEye') index = 27;
+        if (key == 'rightEye') index = 32;
+        if (key == 'nose') index = 62;
+        if (key == 'mouse') index = 57;
+        object.position.x = object.origin.x - pos[index][0] + origin[index][0];
+        object.position.y = object.origin.y + pos[index][1] - origin[index][1];
+
+        if (key == 'mouse') {
+          object.bounds.height = object.height - (pos[47][1] - origin[47][1] - pos[53][1] + origin[53][1])*2;
+        }
+      }
+    }
+    /*
     if (leftBrow && origin && pos) {
       leftBrow.segments[0].point.y = start.y + pos[19][1] - origin[19][1];
       leftBrow.segments[1].point.y = end.y + pos[22][1] - origin[22][1];
@@ -104,40 +125,51 @@ window.onload = function () {
       rightBrow.segments[1].point.y = end.y + pos[15][1] - origin[15][1];
     }
 
+    if (rightEye && origin && pos) {
+      rightEye.position.x = pos[27][0] - origin[27][0]
+      rightEye.position.y = pos[27][1] - origin[27][1]
+      segments[0].point.y = start.y + pos[18][1] - origin[18][1];
+      rightBrow.segments[1].point.y = end.y + pos[15][1] - origin[15][1];
+    }
+    */
+
   }
   paper.view.draw();
 
 }
 
-var leftBrow;
-var rightBrow;
-var nose;
-var face;
-var mouse;
-var leftEye;
-var rightEye;
+
+var face = {}
 function analysis () {
   var brows = _.sortBy(lines, function (line) {
     return line.position.x;
   })
-  leftBrow = brows[0];
-  rightBrow = brows[1]
+  face.leftBrow = brows[0];
+  face.rightBrow = brows[1]
 
-  nose = arcs[0];
+  face.nose = arcs[0];
 
   circles = _.sortBy(circles, function (circle) {
     return circle.area;
   });
-  face = circles[3];
-  mouse = circles[2];
+  face.outline = circles[3];
+  face.mouse = circles[2];
 
   var eyes = _.slice(circles, 0, 2)
   eyes = _.sortBy(eyes, function (eye) {
     return eye.position.x;
   })
+  face.leftEye = eyes[0];
+  face.rightEye = eyes[1];
 
-  leftEye = eyes[0];
-  rightEye = eyes[1];
+  for (var key in face) {
+    var object = face[key];
+    if (!object) continue;
+    object.origin = object.position;
+    object.width = object.bounds.width;
+    object.height = object.bounds.height;
+  }
+
 }
 
 
