@@ -13,8 +13,6 @@ var pathStyle = {
   fullySelected: false
 }
 
-
-
 var vid = document.getElementById('videoel');
 var overlay = document.getElementById('overlay');
 var overlayCC = overlay.getContext('2d');
@@ -137,6 +135,8 @@ function startVideo() {
   ctrack.start(vid);
   // start loop to draw face
   drawLoop();
+
+  analysis();
 }
 
 function drawLoop() {
