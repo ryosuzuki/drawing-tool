@@ -29,6 +29,7 @@
     "victor": "~1.1.0",
     "mousetrap": "~1.5.3",
     "clmtrackr": "*",
-    "jsfeat": "~0.0.8"
+    "jsfeat": "~0.0.8",
+    "threejs": "*"
   }
 }
