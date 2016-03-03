@@ -64,9 +64,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Function} Returns the converted `lodash`.
 	 */
 	function browserConvert(lodash, options) {
-	  return baseConvert(lodash, lodash, undefined, options);
+	  return baseConvert(lodash, lodash, options);
 	}
 
+	if (typeof _ == 'function') {
+	  _ = browserConvert(_.runInContext());
+	}
 	module.exports = browserConvert;
 
 
@@ -94,15 +97,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Function|Object} Returns the converted function or object.
 	 */
 	function baseConvert(util, name, func, options) {
-	  options || (options = {});
+	  var setPlaceholder,
+	      isLib = typeof name == 'function',
+	      isObj = name === Object(name);
 
-	  if (typeof func != 'function') {
+	  if (isObj) {
+	    options = func;
 	    func = name;
 	    name = undefined;
 	  }
 	  if (func == null) {
 	    throw new TypeError;
 	  }
+	  options || (options = {});
+
 	  var config = {
 	    'cap': 'cap' in options ? options.cap : true,
 	    'curry': 'curry' in options ? options.curry : true,
@@ -113,28 +121,32 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var forceRearg = ('rearg' in options) && options.rearg;
 
-	  var isLib = name === undefined && typeof func.VERSION == 'string';
-
-	  var _ = isLib ? func : {
+	  var helpers = isLib ? func : {
 	    'ary': util.ary,
-	    'cloneDeep': util.cloneDeep,
+	    'clone': util.clone,
 	    'curry': util.curry,
 	    'forEach': util.forEach,
+	    'isArray': util.isArray,
 	    'isFunction': util.isFunction,
 	    'iteratee': util.iteratee,
 	    'keys': util.keys,
 	    'rearg': util.rearg,
-	    'spread': util.spread
+	    'spread': util.spread,
+	    'toPath': util.toPath
 	  };
 
-	  var ary = _.ary,
-	      cloneDeep = _.cloneDeep,
-	      curry = _.curry,
-	      each = _.forEach,
-	      isFunction = _.isFunction,
-	      keys = _.keys,
-	      rearg = _.rearg,
-	      spread = _.spread;
+	  var ary = helpers.ary,
+	      clone = helpers.clone,
+	      curry = helpers.curry,
+	      each = helpers.forEach,
+	      isArray = helpers.isArray,
+	      isFunction = helpers.isFunction,
+	      keys = helpers.keys,
+	      rearg = helpers.rearg,
+	      spread = helpers.spread,
+	      toPath = helpers.toPath;
+
+	  var aryMethodKeys = keys(mapping.aryMethod);
 
 	  var baseArity = function(func, n) {
 	    return n == 2
@@ -158,6 +170,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result;
 	  };
 
+	  var cloneByPath = function(object, path) {
+	    path = toPath(path);
+
+	    var index = -1,
+	        length = path.length,
+	        result = clone(Object(object)),
+	        nested = result;
+
+	    while (nested != null && ++index < length) {
+	      var key = path[index],
+	          value = nested[key];
+
+	      if (value != null) {
+	        nested[key] = clone(Object(value));
+	      }
+	      nested = nested[key];
+	    }
+	    return result;
+	  };
+
 	  var createCloner = function(func) {
 	    return function(object) {
 	      return func({}, object);
@@ -165,12 +197,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  var immutWrap = function(func, cloner) {
-	    return overArg(func, cloner, true);
+	    return function() {
+	      var length = arguments.length;
+	      if (!length) {
+	        return result;
+	      }
+	      var args = Array(length);
+	      while (length--) {
+	        args[length] = arguments[length];
+	      }
+	      var result = args[0] = cloner.apply(undefined, args);
+	      func.apply(undefined, args);
+	      return result;
+	    };
 	  };
 
 	  var iterateeAry = function(func, n) {
 	    return overArg(func, function(func) {
-	      return baseAry(func, n);
+	      return typeof func == 'function' ? baseAry(func, n) : func;
 	    });
 	  };
 
@@ -183,31 +227,41 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var overArg = function(func, iteratee, retArg) {
 	    return function() {
-	      var length = arguments.length,
-	          args = Array(length);
-
+	      var length = arguments.length;
+	      if (!length) {
+	        return func();
+	      }
+	      var args = Array(length);
 	      while (length--) {
 	        args[length] = arguments[length];
 	      }
-	      args[0] = iteratee(args[0]);
-	      var result = func.apply(undefined, args);
-	      return retArg ? args[0] : result;
+	      var index = config.rearg ? 0 : (length - 1);
+	      args[index] = iteratee(args[index]);
+	      return func.apply(undefined, args);
 	    };
 	  };
 
 	  var wrappers = {
+	    'castArray': function(castArray) {
+	      return function() {
+	        var value = arguments[0];
+	        return isArray(value)
+	          ? castArray(cloneArray(value))
+	          : castArray.apply(undefined, arguments);
+	      };
+	    },
 	    'iteratee': function(iteratee) {
 	      return function() {
 	        var func = arguments[0],
-	            arity = arguments[1];
+	            arity = arguments[1],
+	            result = iteratee(func, arity),
+	            length = result.length;
 
-	        if (!config.cap) {
-	          return iteratee(func, arity);
+	        if (config.cap && typeof arity == 'number') {
+	          arity = arity > 2 ? (arity - 2) : 1;
+	          return (length && length <= arity) ? result : baseAry(result, arity);
 	        }
-	        arity = arity > 2 ? (arity - 2) : 1;
-	        func = iteratee(func);
-	        var length = func.length;
-	        return (length && length <= arity) ? func : baseAry(func, arity);
+	        return result;
 	      };
 	    },
 	    'mixin': function(mixin) {
@@ -242,7 +296,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    'runInContext': function(runInContext) {
 	      return function(context) {
-	        return baseConvert(util, runInContext(context), undefined, options);
+	        return baseConvert(util, runInContext(context), options);
 	      };
 	    }
 	  };
@@ -262,24 +316,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	        wrapped = immutWrap(func, createCloner(func));
 	      }
 	      else if (mutateMap.set[name]) {
-	        wrapped = immutWrap(func, cloneDeep);
+	        wrapped = immutWrap(func, cloneByPath);
 	      }
 	    }
 	    var result;
-	    each(mapping.caps, function(cap) {
-	      each(mapping.aryMethod[cap], function(otherName) {
+	    each(aryMethodKeys, function(aryKey) {
+	      each(mapping.aryMethod[aryKey], function(otherName) {
 	        if (name == otherName) {
 	          var aryN = !isLib && mapping.iterateeAry[name],
 	              reargIndexes = mapping.iterateeRearg[name],
 	              spreadStart = mapping.methodSpread[name];
 
+	          result = wrapped;
 	          if (config.fixed) {
 	            result = spreadStart === undefined
-	              ? ary(wrapped, cap)
-	              : spread(wrapped, spreadStart);
+	              ? ary(result, aryKey)
+	              : spread(result, spreadStart);
 	          }
-	          if (config.rearg && cap > 1 && (forceRearg || !mapping.skipRearg[name])) {
-	            result = rearg(result, mapping.methodRearg[name] || mapping.aryRearg[cap]);
+	          if (config.rearg && aryKey > 1 && (forceRearg || !mapping.skipRearg[name])) {
+	            result = rearg(result, mapping.methodRearg[name] || mapping.aryRearg[aryKey]);
 	          }
 	          if (config.cap) {
 	            if (reargIndexes) {
@@ -288,8 +343,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	              result = iterateeAry(result, aryN);
 	            }
 	          }
-	          if (config.curry && cap > 1) {
-	            result = curry(result, cap);
+	          if (config.curry && aryKey > 1) {
+	            result = curry(result, aryKey);
 	          }
 	          return false;
 	        }
@@ -297,24 +352,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return !result;
 	    });
 
-	    result || (result = func);
+	    result || (result = wrapped);
 	    if (mapping.placeholder[name]) {
+	      setPlaceholder = true;
 	      func.placeholder = result.placeholder = placeholder;
 	    }
 	    return result;
 	  };
 
-	  if (!isLib) {
+	  if (!isObj) {
 	    return wrap(name, func);
 	  }
-	  // Add placeholder.
-	  _.placeholder = placeholder;
+	  var _ = func;
 
 	  // Iterate over methods for the current ary cap.
 	  var pairs = [];
-	  each(mapping.caps, function(cap) {
-	    each(mapping.aryMethod[cap], function(key) {
-	      var func = _[mapping.rename[key] || key];
+	  each(aryMethodKeys, function(aryKey) {
+	    each(mapping.aryMethod[aryKey], function(key) {
+	      var func = _[mapping.remap[key] || key];
 	      if (func) {
 	        pairs.push([key, wrap(key, func)]);
 	      }
@@ -326,6 +381,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _[pair[0]] = pair[1];
 	  });
 
+	  if (setPlaceholder) {
+	    _.placeholder = placeholder;
+	  }
 	  // Wrap the lodash method and its aliases.
 	  each(keys(_), function(key) {
 	    each(mapping.realToAlias[key] || [], function(alias) {
@@ -383,54 +441,51 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/** Used to map ary to method names. */
 	exports.aryMethod = {
-	  1: [
-	      'attempt', 'ceil', 'create', 'curry', 'curryRight', 'floor', 'fromPairs',
-	      'invert', 'iteratee', 'memoize', 'method', 'methodOf', 'mixin', 'over',
-	      'overEvery', 'overSome', 'rest', 'reverse', 'round', 'runInContext',
-	      'spread', 'template', 'trim', 'trimEnd', 'trimStart', 'uniqueId', 'words'
-	    ],
-	  2: [
-	      'add', 'after', 'ary', 'assign', 'assignIn', 'at', 'before', 'bind', 'bindKey',
-	      'chunk', 'cloneDeepWith', 'cloneWith', 'concat', 'countBy', 'curryN',
-	      'curryRightN', 'debounce', 'defaults', 'defaultsDeep', 'delay', 'difference',
-	      'drop', 'dropRight', 'dropRightWhile', 'dropWhile', 'endsWith', 'eq', 'every',
-	      'filter', 'find', 'find', 'findIndex', 'findKey', 'findLast', 'findLastIndex',
-	      'findLastKey', 'flatMap', 'forEach', 'forEachRight', 'forIn', 'forInRight',
-	      'forOwn', 'forOwnRight', 'get', 'groupBy', 'gt', 'gte', 'has', 'hasIn',
-	      'includes', 'indexOf', 'intersection', 'invertBy', 'invoke', 'invokeMap',
-	      'isEqual', 'isMatch', 'join', 'keyBy', 'lastIndexOf', 'lt', 'lte', 'map',
-	      'mapKeys', 'mapValues', 'matchesProperty', 'maxBy', 'merge', 'minBy', 'omit',
-	      'omitBy', 'orderBy', 'overArgs', 'pad', 'padEnd', 'padStart', 'parseInt',
-	      'partial', 'partialRight', 'partition', 'pick', 'pickBy', 'pull', 'pullAll',
-	      'pullAt', 'random', 'range', 'rangeRight', 'rearg', 'reject', 'remove',
-	      'repeat', 'result', 'sampleSize', 'some', 'sortBy', 'sortedIndex',
-	      'sortedIndexOf', 'sortedLastIndex', 'sortedLastIndexOf', 'sortedUniqBy',
-	      'split', 'startsWith', 'subtract', 'sumBy', 'take', 'takeRight', 'takeRightWhile',
-	      'takeWhile', 'tap', 'throttle', 'thru', 'times', 'trimChars', 'trimCharsEnd',
-	      'trimCharsStart', 'truncate', 'union', 'uniqBy', 'uniqWith', 'unset',
-	      'unzipWith', 'without', 'wrap', 'xor', 'zip', 'zipObject', 'zipObjectDeep'
-	    ],
-	  3: [
-	      'assignInWith', 'assignWith', 'clamp', 'differenceBy', 'differenceWith',
-	      'getOr', 'inRange', 'intersectionBy', 'intersectionWith', 'isEqualWith',
-	      'isMatchWith', 'mergeWith', 'pullAllBy', 'reduce', 'reduceRight', 'replace',
-	      'set', 'slice', 'sortedIndexBy', 'sortedLastIndexBy', 'transform', 'unionBy',
-	      'unionWith', 'xorBy', 'xorWith', 'zipWith'
-	    ],
-	  4: [
-	      'fill', 'setWith'
-	    ]
+	  '1': [
+	    'attempt', 'castArray', 'ceil', 'create', 'curry', 'curryRight', 'floor',
+	    'fromPairs', 'invert', 'iteratee', 'memoize', 'method', 'methodOf', 'mixin',
+	    'over', 'overEvery', 'overSome', 'rest', 'reverse', 'round', 'runInContext',
+	    'spread', 'template', 'trim', 'trimEnd', 'trimStart', 'uniqueId', 'words'
+	  ],
+	  '2': [
+	    'add', 'after', 'ary', 'assign', 'assignIn', 'at', 'before', 'bind', 'bindKey',
+	    'chunk', 'cloneDeepWith', 'cloneWith', 'concat', 'countBy', 'curryN',
+	    'curryRightN', 'debounce', 'defaults', 'defaultsDeep', 'delay', 'difference',
+	    'drop', 'dropRight', 'dropRightWhile', 'dropWhile', 'endsWith', 'eq', 'every',
+	    'filter', 'find', 'find', 'findIndex', 'findKey', 'findLast', 'findLastIndex',
+	    'findLastKey', 'flatMap', 'flattenDepth', 'forEach', 'forEachRight', 'forIn',
+	    'forInRight', 'forOwn', 'forOwnRight', 'get', 'groupBy', 'gt', 'gte', 'has',
+	    'hasIn', 'includes', 'indexOf', 'intersection', 'invertBy', 'invoke', 'invokeMap',
+	    'isEqual', 'isMatch', 'join', 'keyBy', 'lastIndexOf', 'lt', 'lte', 'map',
+	    'mapKeys', 'mapValues', 'matchesProperty', 'maxBy', 'merge', 'minBy', 'omit',
+	    'omitBy', 'overArgs', 'pad', 'padEnd', 'padStart', 'parseInt', 'partial',
+	    'partialRight', 'partition', 'pick', 'pickBy', 'pull', 'pullAll', 'pullAt',
+	    'random', 'range', 'rangeRight', 'rearg', 'reject', 'remove', 'repeat', 'result',
+	    'sampleSize', 'some', 'sortBy', 'sortedIndex', 'sortedIndexOf', 'sortedLastIndex',
+	    'sortedLastIndexOf', 'sortedUniqBy', 'split', 'startsWith', 'subtract', 'sumBy',
+	    'take', 'takeRight', 'takeRightWhile', 'takeWhile', 'tap', 'throttle', 'thru',
+	    'times', 'trimChars', 'trimCharsEnd', 'trimCharsStart', 'truncate', 'union',
+	    'uniqBy', 'uniqWith', 'unset', 'unzipWith', 'without', 'wrap', 'xor', 'zip',
+	    'zipObject', 'zipObjectDeep'
+	  ],
+	  '3': [
+	    'assignInWith', 'assignWith', 'clamp', 'differenceBy', 'differenceWith',
+	    'getOr', 'inRange', 'intersectionBy', 'intersectionWith', 'isEqualWith',
+	    'isMatchWith', 'mergeWith', 'orderBy', 'pullAllBy', 'pullAllWith', 'reduce',
+	    'reduceRight', 'replace', 'set', 'slice', 'sortedIndexBy', 'sortedLastIndexBy',
+	    'transform', 'unionBy', 'unionWith', 'update', 'xorBy', 'xorWith', 'zipWith'
+	  ],
+	  '4': [
+	    'fill', 'setWith', 'updateWith'
+	  ]
 	};
 
 	/** Used to map ary to rearg configs. */
 	exports.aryRearg = {
-	  2: [1, 0],
-	  3: [2, 1, 0],
-	  4: [3, 2, 0, 1]
+	  '2': [1, 0],
+	  '3': [2, 0, 1],
+	  '4': [3, 2, 0, 1]
 	};
-
-	/** Used to iterate `mapping.aryMethod` keys. */
-	exports.caps = [1, 2, 3, 4];
 
 	/** Used to map method names to their iteratee ary. */
 	exports.iterateeAry = {
@@ -474,8 +529,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/** Used to map method names to iteratee rearg configs. */
 	exports.iterateeRearg = {
-	  'findKey': [1],
-	  'findLastKey': [1],
 	  'mapKeys': [1]
 	};
 
@@ -483,14 +536,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.methodRearg = {
 	  'assignInWith': [1, 2, 0],
 	  'assignWith': [1, 2, 0],
-	  'clamp': [2, 0, 1],
+	  'getOr': [2, 1, 0],
+	  'isMatchWith': [2, 1, 0],
 	  'mergeWith': [1, 2, 0],
-	  'reduce': [2, 0, 1],
-	  'reduceRight': [2, 0, 1],
-	  'set': [2, 0, 1],
+	  'pullAllBy': [2, 1, 0],
+	  'pullAllWith': [2, 1, 0],
 	  'setWith': [3, 1, 2, 0],
-	  'slice': [2, 0, 1],
-	  'transform': [2, 0, 1]
+	  'sortedIndexBy': [2, 1, 0],
+	  'sortedLastIndexBy': [2, 1, 0],
+	  'updateWith': [3, 1, 2, 0],
+	  'zipWith': [1, 2, 0]
 	};
 
 	/** Used to map method names to spread configs. */
@@ -506,6 +561,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    'pull': true,
 	    'pullAll': true,
 	    'pullAllBy': true,
+	    'pullAllWith': true,
 	    'pullAt': true,
 	    'remove': true,
 	    'reverse': true
@@ -523,7 +579,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  'set': {
 	    'set': true,
 	    'setWith': true,
-	    'unset': true
+	    'unset': true,
+	    'update': true,
+	    'updateWith': true
 	  }
 	};
 
@@ -555,7 +613,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}());
 
 	/** Used to map method names to other names. */
-	exports.rename = {
+	exports.remap = {
 	  'curryN': 'curry',
 	  'curryRightN': 'curryRight',
 	  'getOr': 'get',

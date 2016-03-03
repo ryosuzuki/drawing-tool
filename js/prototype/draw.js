@@ -58,6 +58,12 @@ window.onload = function () {
     }
     // console.log(total);
 
+    var x = draft.segments.map(function (seg) {
+      return seg.point.x;
+    })
+    var y = draft.segments.map(function (seg) {
+      return seg.point.y;
+    });
     if (total < 1) {
       var from = new Point(draft.segments[0].point);
       var to = new Point(draft.segments[num-1].point);
@@ -65,6 +71,19 @@ window.onload = function () {
       path.style = pathStyle;
       lines.push(path);
       console.log('line');
+
+
+      console.log(_.max(x) - _.min(x))
+      console.log(_.max(y) - _.min(y))
+      length = Math.sqrt(
+        (_.max(x) - _.min(x))^2 + (_.max(y) - _.min(y))^2
+      );
+      length = length / 5;
+      // angle = - (_.max(x)/window.innerWidth) - (_.min(x)/window.innerWidth);
+      drawCylinder(length, angle);
+
+
+
     } else if (total < 5) {
       var from = new Point(draft.segments[0].point);
       var to = new Point(draft.segments[num-1].point);
@@ -74,12 +93,7 @@ window.onload = function () {
       arcs.push(path);
       console.log('arc');
     } else {
-      var x = draft.segments.map(function (seg) {
-        return seg.point.x;
-      })
-      var y = draft.segments.map(function (seg) {
-        return seg.point.y;
-      });
+
       var rectangle = new Rectangle(
         new Point(_.min(x), _.min(y)),
         new Point(_.max(x), _.max(y))
@@ -89,6 +103,16 @@ window.onload = function () {
 
       circles.push(path);
       console.log('circle');
+
+      var pos = { x: 0, y: 0, z: 0 };
+      rad_x = (_.max(x) - _.min(x))/ window.innerWidth * 5;
+      rad_y = (_.max(y) - _.min(y))/ window.innerHeight * 5;
+      var mid_x = (_.min(x) + _.max(x))/2;
+      var mid_y = (_.min(y) + _.max(y))/2;
+      pos.x = - ((mid_x / window.innerWidth) - 0.5) * 10;
+      pos.y = - ((mid_y / window.innerHeight) - 0.5) * 10;
+
+      drawSphere(rad_x, pos);
     }
   }
 

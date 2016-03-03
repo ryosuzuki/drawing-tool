@@ -25,11 +25,12 @@
     "numericjs": "~1.2.6",
     "vectorious": "~4.1.4",
     "paper": "~0.9.25",
-    "lodash": "~4.3.0",
     "victor": "~1.1.0",
     "mousetrap": "~1.5.3",
     "clmtrackr": "*",
     "jsfeat": "~0.0.8",
-    "threejs": "*"
+    "q": "~1.4.1",
+    "lodash": "~4.6.1",
+    "three.js": "mrdoob/three.js"
   }
 }
