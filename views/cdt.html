@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block main %}
+
+<style>
+</style>
+
+<div id="viewport">
+  <canvas id="canvas" resize></canvas>
+</div>
+
+<input class="ui green button" type="button" value="wait, loading video" disabled="disabled" onclick="startVideo()" id="startbutton"></input>
+<div id="container" style="display:none;">
+  <!-- <button class="ui green button">Start</button> -->
+  <video id="videoel" width="400" height="300" autoplay loop></video>
+  <canvas id="overlay" width="400" height="300"></canvas>
+</div>
+
+<script src="/js/prototype/face-detection.js"></script>
+<script src="/js/examples/cdt.js"></script>
+
+<script src="/js/prototype/setup.js"></script>
+<script src="/js/prototype/draw-objects.js"></script>
+<script src="/js/prototype/event.js"></script>
+
+
+
+{% endblock %}

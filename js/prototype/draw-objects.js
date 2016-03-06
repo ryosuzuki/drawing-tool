@@ -16,7 +16,7 @@ normal.normalize()
 var objects = [];
 
 var material = new THREE.MeshLambertMaterial({
-  color: 'eee'
+  color: 0xeeeeee
   // wireframe: true
 })
 

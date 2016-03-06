@@ -26,13 +26,12 @@ function init() {
   var light = new THREE.SpotLight(0x777777, 1.5);
   light.position.set(size*7, size*7, -size*7);
   light.castShadow = true;
-  light.shadowCameraNear = size*3;
-  light.shadowCameraFar = camera.far;
-  light.shadowCameraFov = 70;
-  light.shadowBias = -0.000222;
-  light.shadowDarkness = 0.25;
-  light.shadowMapWidth = 1024;
-  light.shadowMapHeight = 1024;
+  light.shadow.camera.near = size*3;
+  light.shadow.camera.far = camera.far;
+  light.shadow.camera.fov = 70;
+  light.shadow.bias = -0.000222;
+  light.shadow.mapSize.width = 1024;
+  light.shadow.mapSize.height = 1024;
   scene.add(light);
   spotlight = light;
 

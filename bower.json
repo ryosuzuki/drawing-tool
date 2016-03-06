@@ -31,6 +31,8 @@
     "jsfeat": "~0.0.8",
     "q": "~1.4.1",
     "lodash": "~4.6.1",
-    "three.js": "mrdoob/three.js"
+    "three.js": "mrdoob/three.js",
+    "delaunay-fast": "~1.0.1",
+    "poly2tri": "~1.3.5"
   }
 }
