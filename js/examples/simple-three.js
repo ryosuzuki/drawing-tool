@@ -65,28 +65,9 @@ window.onload = function () {
       return seg.point.y;
     });
 
-    var points = draft.segments.map( function (seg) {
-      return seg.point;
-    })
 
 
-    // drawShape(points);
 
-
-    var svg = draft.exportSVG();
-    var d = $(svg).attr('d');
-    console.log('Start svgMesh3d')
-    var mesh = svgMesh3d(d, {
-      scale: 10,
-      simplify: 0.01,
-      randomization: 1000,
-    });
-    window.mesh = mesh;
-
-    complex = reindex(unindex(mesh.positions, mesh.cells));
-    drawSVG(complex)
-
-    /*
     if (total < 1) {
       var from = new Point(draft.segments[0].point);
       var to = new Point(draft.segments[num-1].point);
@@ -127,9 +108,6 @@ window.onload = function () {
       circles.push(path);
       console.log('circle');
 
-
-
-
       var pos = { x: 0, y: 0, z: 0 };
       rad_x = (_.max(x) - _.min(x))/ window.innerWidth * 5;
       rad_y = (_.max(y) - _.min(y))/ window.innerHeight * 5;
@@ -143,7 +121,6 @@ window.onload = function () {
 
       drawSphere(rad_x, pos);
     }
-    */
   }
 
 
