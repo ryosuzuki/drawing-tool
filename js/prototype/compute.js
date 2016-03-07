@@ -1,4 +1,102 @@
+function computeSkeleton () {
+  var map = geometry.map;
+
+  total = []
+  external = []
+  internal = []
+  for (var i=0; i<geometry.faces.length; i++) {
+    var face = geometry.faces[i];
+    var a = map[face.a]
+    var b = map[face.b]
+    var c = map[face.c]
+    var v = [a, b, c].sort()
+
+    var e0 = v[0] + '-' + v[1]
+    var e1 = v[0] + '-' + v[2]
+    var e2 = v[1] + '-' + v[2]
+    total.push(e0)
+    total.push(e1)
+    total.push(e2)
+    if (!external.includes(e0)) {
+      external.push(e0)
+    } else {
+      var index = external.indexOf(e0)
+      external.splice(index, 1)
+      internal.push(e0)
+    }
+    if (!external.includes(e1)) {
+      external.push(e1)
+    } else {
+      var index = external.indexOf(e1)
+      external.splice(index, 1)
+      internal.push(e1)
+    }
+    if (!external.includes(e2)) {
+      external.push(e2)
+    } else {
+      var index = external.indexOf(e2)
+      external.splice(index, 1)
+      internal.push(e2)
+    }
+  }
+
+  var points = new THREE.Geometry();
+  for (var i=0; i<geometry.faces.length; i++) {
+    var face = geometry.faces[i];
+    var v = [map[face.a], map[face.b], map[face.c]].sort()
+    var e0 = v[0] + '-' + v[1]
+    var e1 = v[0] + '-' + v[2]
+    var e2 = v[1] + '-' + v[2]
+
+    var v0, v1, v2;
+    if (internal.includes(e0)) {
+      v0 = v[0]
+      v1 = v[1]
+    }
+    if (internal.includes(e1)) {
+      v0 = v[0]
+      v2 = v[2]
+    }
+    if (internal.includes(e2)) {
+      v1 = v[1]
+      v2 = v[2]
+    }
+
+    var v = new THREE.Vector3();
+    if (v0 && v1) {
+      var a = uniq[v0].vertex
+      var b = uniq[v1].vertex
+      var ab = v.clone().addVectors(a, b).multiplyScalar(1/2);
+      points.vertices.push(ab)
+    }
+    if (v0 && v2) {
+      var a = uniq[v0].vertex
+      var c = uniq[v2].vertex
+      var ac = v.clone().addVectors(a, c).multiplyScalar(1/2);
+      points.vertices.push(ac)
+    }
+    if (v1 && v2) {
+      var b = uniq[v1].vertex
+      var c = uniq[v2].vertex
+      var bc = v.clone().addVectors(b, c).multiplyScalar(1/2);
+      points.vertices.push(bc)
+    }
+
+    var mat = new THREE.PointsMaterial( {
+      size: 0.05,
+      // transparent: true,
+      // opacity: 0.7,
+      color: 0xff0000
+    } );
+    particles = new THREE.Points(points, mat)
+    scene.add(particles)
+  }
+
+
+}
+
 function computeLaplacian () {
+  console.log('Start computeLaplacian')
   var map = geometry.map;
   var positions = geometry.uniq.map( function (u) {
     var v = u.vertex;
