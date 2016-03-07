@@ -74,10 +74,10 @@ function computeSkeleton () {
 
     if (points.vertices.length >= 2) {
       var mat = new THREE.PointsMaterial( {
-        size: 0.05,
+        size: 0.5,
         // transparent: true,
         // opacity: 0.7,
-        color: 0xff0000
+        color: 0x00ffff
       } );
       var line = new THREE.Line(points, mat)
       scene.add(line)

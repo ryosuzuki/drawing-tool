@@ -16,7 +16,7 @@ normal.normalize()
 var objects = [];
 
 var material = new THREE.MeshLambertMaterial({
-  color: 0xeeeeee,
+  color: 0xffffff,
   side: THREE.DoubleSide,
   wireframe: false
 })
@@ -27,6 +27,23 @@ function toggleWireframe () {
   material.wireframe = !material.wireframe;
   mesh.material = material;
   mesh.material.needsUpdate = true
+}
+
+function loadSVG () {
+  loadSvg('/assets/human.svg', function (err, svg) {
+    console.log(svg)
+    d = $('path', svg).attr('d');
+    console.log('Start svgMesh3d')
+    mesh = svgMesh3d(d, {
+      scale: 10,
+      simplify: 0.1,
+      // randomization: 1000,
+    });
+
+    complex = reindex(unindex(mesh.positions, mesh.cells));
+    drawSVG(complex)
+
+  })
 }
 
 function drawSVG (complex) {

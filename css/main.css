@@ -19,14 +19,18 @@ html, body {
 
 #startbutton {
   position: absolute;
-  bottom: 310px;
-  right: 200px;
-
+  bottom: 20px;
+  right: 315px;
 }
-
 #wireframe-button {
   position: absolute;
-  bottom: 310px;
+  bottom: 20px;
+  right: 140px;
+}
+
+#load-button {
+  position: absolute;
+  bottom: 20px;
   right: 20px;
 }
 
