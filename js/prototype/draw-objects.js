@@ -30,7 +30,7 @@ function toggleWireframe () {
 }
 
 function loadSVG () {
-  loadSvg('/assets/human.svg', function (err, svg) {
+  loadSvg('/assets/mickey.svg', function (err, svg) {
     console.log(svg)
     d = $('path', svg).attr('d');
     console.log('Start svgMesh3d')
