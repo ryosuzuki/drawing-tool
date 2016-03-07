@@ -79,10 +79,8 @@ window.onload = function () {
     var mesh = svgMesh3d(d, {
       scale: 10,
       simplify: 0.01,
-      randomization: 1000,
+      // randomization: 1000,
     });
-    window.mesh = mesh;
-
     complex = reindex(unindex(mesh.positions, mesh.cells));
     drawSVG(complex)
 

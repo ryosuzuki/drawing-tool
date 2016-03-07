@@ -20,8 +20,14 @@ html, body {
 #startbutton {
   position: absolute;
   bottom: 310px;
-  right: 20px;
+  right: 200px;
 
+}
+
+#wireframe-button {
+  position: absolute;
+  bottom: 310px;
+  right: 20px;
 }
 
 #container {

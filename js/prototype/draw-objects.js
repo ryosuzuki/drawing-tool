@@ -18,14 +18,22 @@ var objects = [];
 var material = new THREE.MeshLambertMaterial({
   color: 0xeeeeee,
   side: THREE.DoubleSide,
-  // wireframe: true
+  wireframe: false
 })
+
+var mesh;
+
+function toggleWireframe () {
+  material.wireframe = !material.wireframe;
+  mesh.material = material;
+  mesh.material.needsUpdate = true
+}
 
 function drawSVG (complex) {
   console.log('Start drawSVG')
   var geometry = new createGeom(complex)
   window.geometry = geometry;
-  var mesh = new THREE.Mesh(geometry, material)
+  mesh = new THREE.Mesh(geometry, material)
   scene.add(mesh);
 }
 
