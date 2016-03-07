@@ -29,8 +29,16 @@ function toggleWireframe () {
   mesh.material.needsUpdate = true
 }
 
-function loadSVG () {
-  loadSvg('/assets/mickey.svg', function (err, svg) {
+function loadSVG (type) {
+  scene.remove(mesh)
+  for (var i=0; i<lines.length; i++) {
+    scene.remove(lines[i])
+  }
+  var file = '/assets/human.svg'
+  if (type == 'mickey') file = '/assets/mickey.svg'
+  if (type == 'donald') file = '/assets/donald.svg'
+
+  loadSvg(file, function (err, svg) {
     console.log(svg)
     d = $('path', svg).attr('d');
     console.log('Start svgMesh3d')

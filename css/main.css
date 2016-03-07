@@ -34,6 +34,18 @@ html, body {
   right: 20px;
 }
 
+#load-button-2 {
+  position: absolute;
+  bottom: 70px;
+  right: 20px;
+}
+#load-button-1 {
+  position: absolute;
+  bottom: 120px;
+  right: 20px;
+}
+
+
 #container {
   position: absolute;
   bottom: 0px;
