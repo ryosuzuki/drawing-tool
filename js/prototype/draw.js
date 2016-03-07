@@ -37,7 +37,7 @@ window.onload = function () {
 
   tool.onMouseUp = function(event) {
     var segmentCount = draft.segments.length;
-    draft.simplify(1);
+    draft.simplify(10);
     var newSegmentCount = draft.segments.length;
     var difference = segmentCount - newSegmentCount;
     var percentage = 100 - Math.round(newSegmentCount / segmentCount * 100);
@@ -72,13 +72,13 @@ window.onload = function () {
 
     // drawShape(points);
 
-
+    console.log('Start exportSVG')
     var svg = draft.exportSVG();
-    var d = $(svg).attr('d');
+    d = $(svg).attr('d');
     console.log('Start svgMesh3d')
     mesh = svgMesh3d(d, {
       scale: 10,
-      simplify: 0.01,
+      simplify: 0.1,
       // randomization: 1000,
     });
 

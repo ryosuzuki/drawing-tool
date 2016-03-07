@@ -18,7 +18,7 @@ var objects = [];
 var material = new THREE.MeshLambertMaterial({
   color: 0xeeeeee,
   side: THREE.DoubleSide,
-  wireframe: true
+  wireframe: false
 })
 
 var mesh;
@@ -39,7 +39,22 @@ function drawSVG (complex) {
   Q.fcall(computeUniq())
   .then(computeLaplacian())
   .then(computeSkeleton())
+  .then(redraw())
+}
 
+function redraw () {
+  scene.remove(mesh)
+  console.log('Start redraw')
+  svgMesh = svgMesh3d(d, {
+    scale: 10,
+    simplify: 0.1,
+    randomization: 1000,
+  });
+  complex = reindex(unindex(svgMesh.positions, svgMesh.cells));
+  var geometry = new createGeom(complex)
+  window.geometry = geometry;
+  mesh = new THREE.Mesh(geometry, material)
+  scene.add(mesh);
 }
 
 
