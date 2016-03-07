@@ -44,7 +44,7 @@ window.onload = function () {
 
     end = event.point;
 
-    draft.remove();
+    // draft.remove();
     var num = draft.segments.length;
     var total = 0;
     for (var i=0; i<num-2; i++) {
@@ -76,11 +76,12 @@ window.onload = function () {
     var svg = draft.exportSVG();
     var d = $(svg).attr('d');
     console.log('Start svgMesh3d')
-    var mesh = svgMesh3d(d, {
+    mesh = svgMesh3d(d, {
       scale: 10,
       simplify: 0.01,
       // randomization: 1000,
     });
+
     complex = reindex(unindex(mesh.positions, mesh.cells));
     drawSVG(complex)
 

@@ -1681,997 +1681,33 @@ window.svgMesh3d = require('svg-mesh-3d')
 window.reindex= require('mesh-reindex');
 window.unindex= require('unindex-mesh');
 window.createGeom = require('three-simplicial-complex')(THREE)
-},{"extract-svg-path":6,"load-svg":11,"mesh-reindex":12,"svg-mesh-3d":15,"three-simplicial-complex":82,"unindex-mesh":84}],6:[function(require,module,exports){
-var parseXml = require('xml-parse-from-string')
 
-function extractSvgPath (svgDoc) {
-  // concat all the <path> elements to form an SVG path string
-  if (typeof svgDoc === 'string') {
-    svgDoc = parseXml(svgDoc)
-  }
-  if (!svgDoc || typeof svgDoc.getElementsByTagName !== 'function') {
-    throw new Error('could not get an XML document from the specified SVG contents')
-  }
-
-  var paths = Array.prototype.slice.call(svgDoc.getElementsByTagName('path'))
-  return paths.reduce(function (prev, path) {
-    var d = path.getAttribute('d') || ''
-    return prev + ' ' + d.replace(/\s+/g, ' ').trim()
-  }, '').trim()
-}
-
-module.exports = function () {
-  throw new Error('use extract-svg-path/transform to inline SVG contents into your bundle')
-}
-
-module.exports.parse = extractSvgPath
-
-//deprecated
-module.exports.fromString = extractSvgPath
-
-},{"xml-parse-from-string":86}],7:[function(require,module,exports){
-var isFunction = require('is-function')
-
-module.exports = forEach
-
-var toString = Object.prototype.toString
-var hasOwnProperty = Object.prototype.hasOwnProperty
-
-function forEach(list, iterator, context) {
-    if (!isFunction(iterator)) {
-        throw new TypeError('iterator must be a function')
-    }
-
-    if (arguments.length < 3) {
-        context = this
-    }
-    
-    if (toString.call(list) === '[object Array]')
-        forEachArray(list, iterator, context)
-    else if (typeof list === 'string')
-        forEachString(list, iterator, context)
-    else
-        forEachObject(list, iterator, context)
-}
-
-function forEachArray(array, iterator, context) {
-    for (var i = 0, len = array.length; i < len; i++) {
-        if (hasOwnProperty.call(array, i)) {
-            iterator.call(context, array[i], i, array)
-        }
-    }
-}
-
-function forEachString(string, iterator, context) {
-    for (var i = 0, len = string.length; i < len; i++) {
-        // no such thing as a sparse string.
-        iterator.call(context, string.charAt(i), i, string)
-    }
-}
-
-function forEachObject(object, iterator, context) {
-    for (var k in object) {
-        if (hasOwnProperty.call(object, k)) {
-            iterator.call(context, object[k], k, object)
-        }
-    }
-}
-
-},{"is-function":10}],8:[function(require,module,exports){
-(function (global){
-if (typeof window !== "undefined") {
-    module.exports = window;
-} else if (typeof global !== "undefined") {
-    module.exports = global;
-} else if (typeof self !== "undefined"){
-    module.exports = self;
-} else {
-    module.exports = {};
-}
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],9:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-},{}],10:[function(require,module,exports){
-module.exports = isFunction
-
-var toString = Object.prototype.toString
-
-function isFunction (fn) {
-  var string = toString.call(fn)
-  return string === '[object Function]' ||
-    (typeof fn === 'function' && string !== '[object RegExp]') ||
-    (typeof window !== 'undefined' &&
-     // IE8 and below
-     (fn === window.setTimeout ||
-      fn === window.alert ||
-      fn === window.confirm ||
-      fn === window.prompt))
-};
-
-},{}],11:[function(require,module,exports){
-var xhr = require('xhr');
-
-module.exports = function (opts, cb) {
-    if (typeof opts === 'string') opts = { uri: opts };
-    
-    xhr(opts, function (err, res, body) {
-        if (err) return cb(err);
-        if (!/^2/.test(res.statusCode)) {
-            return cb(new Error('http status code: ' + res.statusCode));
-        }
-        var div = document.createElement('div');
-        div.innerHTML = body;
-        var svg = div.querySelector('svg');
-        if (!svg) return cb(new Error('svg not present in resource'));
-        cb(null, svg);
-    });
-};
-
-},{"xhr":85}],12:[function(require,module,exports){
-module.exports = reindex
-
-function reindex(array) {
-  var pos = []
-  var cel = []
-
-  var i = 0
-  var c = 0
-  while (i < array.length) {
-    cel.push([c++, c++, c++])
-    pos.push([
-        array[i++]
-      , array[i++]
-      , array[i++]
-    ], [
-        array[i++]
-      , array[i++]
-      , array[i++]
-    ], [
-        array[i++]
-      , array[i++]
-      , array[i++]
-    ])
-  }
-
-  return {
-      positions: pos
-    , cells: cel
-  }
-}
-
-},{}],13:[function(require,module,exports){
-module.exports = once
-
-once.proto = once(function () {
-  Object.defineProperty(Function.prototype, 'once', {
-    value: function () {
-      return once(this)
-    },
-    configurable: true
-  })
-})
-
-function once (fn) {
-  var called = false
-  return function () {
-    if (called) return
-    called = true
-    return fn.apply(this, arguments)
-  }
-}
-
-},{}],14:[function(require,module,exports){
-var trim = require('trim')
-  , forEach = require('for-each')
-  , isArray = function(arg) {
-      return Object.prototype.toString.call(arg) === '[object Array]';
-    }
-
-module.exports = function (headers) {
-  if (!headers)
-    return {}
-
-  var result = {}
-
-  forEach(
-      trim(headers).split('\n')
-    , function (row) {
-        var index = row.indexOf(':')
-          , key = trim(row.slice(0, index)).toLowerCase()
-          , value = trim(row.slice(index + 1))
-
-        if (typeof(result[key]) === 'undefined') {
-          result[key] = value
-        } else if (isArray(result[key])) {
-          result[key].push(value)
-        } else {
-          result[key] = [ result[key], value ]
-        }
-      }
-  )
-
-  return result
-}
-},{"for-each":7,"trim":83}],15:[function(require,module,exports){
-var parseSVG = require('parse-svg-path')
-var getContours = require('svg-path-contours')
-var cdt2d = require('cdt2d')
-var cleanPSLG = require('clean-pslg')
-var getBounds = require('bound-points')
-var normalize = require('normalize-path-scale')
-var random = require('random-float')
-var assign = require('object-assign')
-var simplify = require('simplify-path')
-
-module.exports = svgMesh3d
-function svgMesh3d (svgPath, opt) {
-  if (typeof svgPath !== 'string') {
-    throw new TypeError('must provide a string as first parameter')
-  }
-  
-  opt = assign({
-    delaunay: true,
-    clean: true,
-    exterior: false,
-    randomization: 0,
-    simplify: 0,
-    scale: 1
-  }, opt)
-  
-  var i
-  // parse string as a list of operations
-  var svg = parseSVG(svgPath)
-  
-  // convert curves into discrete points
-  var contours = getContours(svg, opt.scale)
-  
-  // optionally simplify the path for faster triangulation and/or aesthetics
-  if (opt.simplify > 0 && typeof opt.simplify === 'number') {
-    for (i = 0; i < contours.length; i++) {
-      contours[i] = simplify(contours[i], opt.simplify)
-    }
-  }
-  
-  // prepare for triangulation
-  var polyline = denestPolyline(contours)
-  var positions = polyline.positions
-  var bounds = getBounds(positions)
-
-  // optionally add random points for aesthetics
-  var randomization = opt.randomization
-  if (typeof randomization === 'number' && randomization > 0) {
-    addRandomPoints(positions, bounds, randomization)
-  }
-  
-  var loops = polyline.edges
-  var edges = []
-  for (i = 0; i < loops.length; ++i) {
-    var loop = loops[i]
-    for (var j = 0; j < loop.length; ++j) {
-      edges.push([loop[j], loop[(j + 1) % loop.length]])
-    }
-  }
-
-  // this updates points/edges so that they now form a valid PSLG 
-  if (opt.clean !== false) {
-    cleanPSLG(positions, edges)
-  }
-
-  // triangulate mesh
-  var cells = cdt2d(positions, edges, opt)
-
-  // rescale to [-1 ... 1]
-  normalize(positions, bounds)
-
-  // convert to 3D representation and flip on Y axis for convenience w/ OpenGL
-  to3D(positions)
-
-  return {
-    positions: positions,
-    cells: cells
-  }
-}
-
-function to3D (positions) {
-  for (var i = 0; i < positions.length; i++) {
-    var xy = positions[i]
-    xy[1] *= -1
-    xy[2] = xy[2] || 0
-  }
-}
-
-function addRandomPoints (positions, bounds, count) {
-  var min = bounds[0]
-  var max = bounds[1]
-
-  for (var i = 0; i < count; i++) {
-    positions.push([ // random [ x, y ]
-      random(min[0], max[0]),
-      random(min[1], max[1])
-    ])
-  }
-}
-
-function denestPolyline (nested) {
-  var positions = []
-  var edges = []
-
-  for (var i = 0; i < nested.length; i++) {
-    var path = nested[i]
-    var loop = []
-    for (var j = 0; j < path.length; j++) {
-      var pos = path[j]
-      var idx = positions.indexOf(pos)
-      if (idx === -1) {
-        positions.push(pos)
-        idx = positions.length - 1
-      }
-      loop.push(idx)
-    }
-    edges.push(loop)
-  }
-  return {
-    positions: positions,
-    edges: edges
-  }
-}
-
-},{"bound-points":38,"cdt2d":46,"clean-pslg":51,"normalize-path-scale":57,"object-assign":59,"parse-svg-path":60,"random-float":61,"simplify-path":73,"svg-path-contours":75}],16:[function(require,module,exports){
-
-module.exports = absolutize
-
-/**
- * redefine `path` with absolute coordinates
- *
- * @param {Array} path
- * @return {Array}
- */
-
-function absolutize(path){
-	var startX = 0
-	var startY = 0
-	var x = 0
-	var y = 0
-
-	return path.map(function(seg){
-		seg = seg.slice()
-		var type = seg[0]
-		var command = type.toUpperCase()
-
-		// is relative
-		if (type != command) {
-			seg[0] = command
-			switch (type) {
-				case 'a':
-					seg[6] += x
-					seg[7] += y
-					break
-				case 'v':
-					seg[1] += y
-					break
-				case 'h':
-					seg[1] += x
-					break
-				default:
-					for (var i = 1; i < seg.length;) {
-						seg[i++] += x
-						seg[i++] += y
-					}
-			}
-		}
-
-		// update cursor state
-		switch (command) {
-			case 'Z':
-				x = startX
-				y = startY
-				break
-			case 'H':
-				x = seg[1]
-				break
-			case 'V':
-				y = seg[1]
-				break
-			case 'M':
-				x = startX = seg[1]
-				y = startY = seg[2]
-				break
-			default:
-				x = seg[seg.length - 2]
-				y = seg[seg.length - 1]
-		}
-
-		return seg
-	})
-}
-
-},{}],17:[function(require,module,exports){
-function clone(point) { //TODO: use gl-vec2 for this
-    return [point[0], point[1]]
-}
-
-function vec2(x, y) {
-    return [x, y]
-}
-
-module.exports = function createBezierBuilder(opt) {
-    opt = opt||{}
-
-    var RECURSION_LIMIT = typeof opt.recursion === 'number' ? opt.recursion : 8
-    var FLT_EPSILON = typeof opt.epsilon === 'number' ? opt.epsilon : 1.19209290e-7
-    var PATH_DISTANCE_EPSILON = typeof opt.pathEpsilon === 'number' ? opt.pathEpsilon : 1.0
-
-    var curve_angle_tolerance_epsilon = typeof opt.angleEpsilon === 'number' ? opt.angleEpsilon : 0.01
-    var m_angle_tolerance = opt.angleTolerance || 0
-    var m_cusp_limit = opt.cuspLimit || 0
-
-    return function bezierCurve(start, c1, c2, end, scale, points) {
-        if (!points)
-            points = []
-
-        scale = typeof scale === 'number' ? scale : 1.0
-        var distanceTolerance = PATH_DISTANCE_EPSILON / scale
-        distanceTolerance *= distanceTolerance
-        begin(start, c1, c2, end, points, distanceTolerance)
-        return points
-    }
-
-
-    ////// Based on:
-    ////// https://github.com/pelson/antigrain/blob/master/agg-2.4/src/agg_curves.cpp
-
-    function begin(start, c1, c2, end, points, distanceTolerance) {
-        points.push(clone(start))
-        var x1 = start[0],
-            y1 = start[1],
-            x2 = c1[0],
-            y2 = c1[1],
-            x3 = c2[0],
-            y3 = c2[1],
-            x4 = end[0],
-            y4 = end[1]
-        recursive(x1, y1, x2, y2, x3, y3, x4, y4, points, distanceTolerance, 0)
-        points.push(clone(end))
-    }
-
-    function recursive(x1, y1, x2, y2, x3, y3, x4, y4, points, distanceTolerance, level) {
-        if(level > RECURSION_LIMIT) 
-            return
-
-        var pi = Math.PI
-
-        // Calculate all the mid-points of the line segments
-        //----------------------
-        var x12   = (x1 + x2) / 2
-        var y12   = (y1 + y2) / 2
-        var x23   = (x2 + x3) / 2
-        var y23   = (y2 + y3) / 2
-        var x34   = (x3 + x4) / 2
-        var y34   = (y3 + y4) / 2
-        var x123  = (x12 + x23) / 2
-        var y123  = (y12 + y23) / 2
-        var x234  = (x23 + x34) / 2
-        var y234  = (y23 + y34) / 2
-        var x1234 = (x123 + x234) / 2
-        var y1234 = (y123 + y234) / 2
-
-        if(level > 0) { // Enforce subdivision first time
-            // Try to approximate the full cubic curve by a single straight line
-            //------------------
-            var dx = x4-x1
-            var dy = y4-y1
-
-            var d2 = Math.abs((x2 - x4) * dy - (y2 - y4) * dx)
-            var d3 = Math.abs((x3 - x4) * dy - (y3 - y4) * dx)
-
-            var da1, da2
-
-            if(d2 > FLT_EPSILON && d3 > FLT_EPSILON) {
-                // Regular care
-                //-----------------
-                if((d2 + d3)*(d2 + d3) <= distanceTolerance * (dx*dx + dy*dy)) {
-                    // If the curvature doesn't exceed the distanceTolerance value
-                    // we tend to finish subdivisions.
-                    //----------------------
-                    if(m_angle_tolerance < curve_angle_tolerance_epsilon) {
-                        points.push(vec2(x1234, y1234))
-                        return
-                    }
-
-                    // Angle & Cusp Condition
-                    //----------------------
-                    var a23 = Math.atan2(y3 - y2, x3 - x2)
-                    da1 = Math.abs(a23 - Math.atan2(y2 - y1, x2 - x1))
-                    da2 = Math.abs(Math.atan2(y4 - y3, x4 - x3) - a23)
-                    if(da1 >= pi) da1 = 2*pi - da1
-                    if(da2 >= pi) da2 = 2*pi - da2
-
-                    if(da1 + da2 < m_angle_tolerance) {
-                        // Finally we can stop the recursion
-                        //----------------------
-                        points.push(vec2(x1234, y1234))
-                        return
-                    }
-
-                    if(m_cusp_limit !== 0.0) {
-                        if(da1 > m_cusp_limit) {
-                            points.push(vec2(x2, y2))
-                            return
-                        }
-
-                        if(da2 > m_cusp_limit) {
-                            points.push(vec2(x3, y3))
-                            return
-                        }
-                    }
-                }
-            }
-            else {
-                if(d2 > FLT_EPSILON) {
-                    // p1,p3,p4 are collinear, p2 is considerable
-                    //----------------------
-                    if(d2 * d2 <= distanceTolerance * (dx*dx + dy*dy)) {
-                        if(m_angle_tolerance < curve_angle_tolerance_epsilon) {
-                            points.push(vec2(x1234, y1234))
-                            return
-                        }
-
-                        // Angle Condition
-                        //----------------------
-                        da1 = Math.abs(Math.atan2(y3 - y2, x3 - x2) - Math.atan2(y2 - y1, x2 - x1))
-                        if(da1 >= pi) da1 = 2*pi - da1
-
-                        if(da1 < m_angle_tolerance) {
-                            points.push(vec2(x2, y2))
-                            points.push(vec2(x3, y3))
-                            return
-                        }
-
-                        if(m_cusp_limit !== 0.0) {
-                            if(da1 > m_cusp_limit) {
-                                points.push(vec2(x2, y2))
-                                return
-                            }
-                        }
-                    }
-                }
-                else if(d3 > FLT_EPSILON) {
-                    // p1,p2,p4 are collinear, p3 is considerable
-                    //----------------------
-                    if(d3 * d3 <= distanceTolerance * (dx*dx + dy*dy)) {
-                        if(m_angle_tolerance < curve_angle_tolerance_epsilon) {
-                            points.push(vec2(x1234, y1234))
-                            return
-                        }
-
-                        // Angle Condition
-                        //----------------------
-                        da1 = Math.abs(Math.atan2(y4 - y3, x4 - x3) - Math.atan2(y3 - y2, x3 - x2))
-                        if(da1 >= pi) da1 = 2*pi - da1
-
-                        if(da1 < m_angle_tolerance) {
-                            points.push(vec2(x2, y2))
-                            points.push(vec2(x3, y3))
-                            return
-                        }
-
-                        if(m_cusp_limit !== 0.0) {
-                            if(da1 > m_cusp_limit)
-                            {
-                                points.push(vec2(x3, y3))
-                                return
-                            }
-                        }
-                    }
-                }
-                else {
-                    // Collinear case
-                    //-----------------
-                    dx = x1234 - (x1 + x4) / 2
-                    dy = y1234 - (y1 + y4) / 2
-                    if(dx*dx + dy*dy <= distanceTolerance) {
-                        points.push(vec2(x1234, y1234))
-                        return
-                    }
-                }
-            }
-        }
-
-        // Continue subdivision
-        //----------------------
-        recursive(x1, y1, x12, y12, x123, y123, x1234, y1234, points, distanceTolerance, level + 1) 
-        recursive(x1234, y1234, x234, y234, x34, y34, x4, y4, points, distanceTolerance, level + 1) 
-    }
-}
-
-},{}],18:[function(require,module,exports){
-module.exports = require('./function')()
-},{"./function":17}],19:[function(require,module,exports){
-'use strict'
-
-var rationalize = require('./lib/rationalize')
-
-module.exports = add
-
-function add(a, b) {
-  return rationalize(
-    a[0].mul(b[1]).add(b[0].mul(a[1])),
-    a[1].mul(b[1]))
-}
-
-},{"./lib/rationalize":29}],20:[function(require,module,exports){
-'use strict'
-
-module.exports = cmp
-
-function cmp(a, b) {
-    return a[0].mul(b[1]).cmp(b[0].mul(a[1]))
-}
-
-},{}],21:[function(require,module,exports){
-'use strict'
-
-var rationalize = require('./lib/rationalize')
-
-module.exports = div
-
-function div(a, b) {
-  return rationalize(a[0].mul(b[1]), a[1].mul(b[0]))
-}
-
-},{"./lib/rationalize":29}],22:[function(require,module,exports){
-'use strict'
-
-var isRat = require('./is-rat')
-var isBN = require('./lib/is-bn')
-var num2bn = require('./lib/num-to-bn')
-var str2bn = require('./lib/str-to-bn')
-var rationalize = require('./lib/rationalize')
-var div = require('./div')
-
-module.exports = makeRational
-
-function makeRational(numer, denom) {
-  if(isRat(numer)) {
-    if(denom) {
-      return div(numer, makeRational(denom))
-    }
-    return [numer[0].clone(), numer[1].clone()]
-  }
-  var shift = 0
-  var a, b
-  if(isBN(numer)) {
-    a = numer.clone()
-  } else if(typeof numer === 'string') {
-    a = str2bn(numer)
-  } else if(numer === 0) {
-    return [num2bn(0), num2bn(1)]
-  } else if(numer === Math.floor(numer)) {
-    a = num2bn(numer)
-  } else {
-    while(numer !== Math.floor(numer)) {
-      numer = numer * Math.pow(2, 256)
-      shift -= 256
-    }
-    a = num2bn(numer)
-  }
-  if(isRat(denom)) {
-    a.mul(denom[1])
-    b = denom[0].clone()
-  } else if(isBN(denom)) {
-    b = denom.clone()
-  } else if(typeof denom === 'string') {
-    b = str2bn(denom)
-  } else if(!denom) {
-    b = num2bn(1)
-  } else if(denom === Math.floor(denom)) {
-    b = num2bn(denom)
-  } else {
-    while(denom !== Math.floor(denom)) {
-      denom = denom * Math.pow(2, 256)
-      shift += 256
-    }
-    b = num2bn(denom)
-  }
-  if(shift > 0) {
-    a = a.shln(shift)
-  } else if(shift < 0) {
-    b = b.shln(-shift)
-  }
-  return rationalize(a, b)
-}
-
-},{"./div":21,"./is-rat":23,"./lib/is-bn":27,"./lib/num-to-bn":28,"./lib/rationalize":29,"./lib/str-to-bn":30}],23:[function(require,module,exports){
-'use strict'
-
-var isBN = require('./lib/is-bn')
-
-module.exports = isRat
-
-function isRat(x) {
-  return Array.isArray(x) && x.length === 2 && isBN(x[0]) && isBN(x[1])
-}
-
-},{"./lib/is-bn":27}],24:[function(require,module,exports){
-'use strict'
-
-var bn = require('bn.js')
-
-module.exports = sign
-
-function sign(x) {
-  return x.cmp(new bn(0))
-}
-
-},{"bn.js":37}],25:[function(require,module,exports){
-'use strict'
-
-module.exports = bn2num
-
-//TODO: Make this better
-function bn2num(b) {
-  var l = b.length
-  var words = b.words
-  var out = 0
-  if (l === 1) {
-    out = words[0]
-  } else if (l === 2) {
-    out = words[0] + (words[1] * 0x4000000)
-  } else {
-    var out = 0
-    for (var i = 0; i < l; i++) {
-      var w = words[i]
-      out += w * Math.pow(0x4000000, i)
-    }
-  }
-  return b.sign ? -out : out
-}
-
-},{}],26:[function(require,module,exports){
-'use strict'
-
-var db = require('double-bits')
-var ctz = require('bit-twiddle').countTrailingZeros
-
-module.exports = ctzNumber
-
-//Counts the number of trailing zeros
-function ctzNumber(x) {
-  var l = ctz(db.lo(x))
-  if(l < 32) {
-    return l
-  }
-  var h = ctz(db.hi(x))
-  if(h > 20) {
-    return 52
-  }
-  return h + 32
-}
-
-},{"bit-twiddle":36,"double-bits":54}],27:[function(require,module,exports){
-'use strict'
-
-var BN = require('bn.js')
-
-module.exports = isBN
-
-//Test if x is a bignumber
-//FIXME: obviously this is the wrong way to do it
-function isBN(x) {
-  return x && typeof x === 'object' && Boolean(x.words)
-}
-
-},{"bn.js":37}],28:[function(require,module,exports){
-'use strict'
-
-var BN = require('bn.js')
-var db = require('double-bits')
-
-module.exports = num2bn
-
-function num2bn(x) {
-  var e = db.exponent(x)
-  if(e < 52) {
-    return new BN(x)
-  } else {
-    return (new BN(x * Math.pow(2, 52-e))).shln(e-52)
-  }
-}
-
-},{"bn.js":37,"double-bits":54}],29:[function(require,module,exports){
-'use strict'
-
-var num2bn = require('./num-to-bn')
-var sign = require('./bn-sign')
-
-module.exports = rationalize
-
-function rationalize(numer, denom) {
-  var snumer = sign(numer)
-  var sdenom = sign(denom)
-  if(snumer === 0) {
-    return [num2bn(0), num2bn(1)]
-  }
-  if(sdenom === 0) {
-    return [num2bn(0), num2bn(0)]
-  }
-  if(sdenom < 0) {
-    numer = numer.neg()
-    denom = denom.neg()
-  }
-  var d = numer.gcd(denom)
-  if(d.cmpn(1)) {
-    return [ numer.div(d), denom.div(d) ]
-  }
-  return [ numer, denom ]
-}
-
-},{"./bn-sign":24,"./num-to-bn":28}],30:[function(require,module,exports){
-'use strict'
-
-var BN = require('bn.js')
-
-module.exports = str2BN
-
-function str2BN(x) {
-  return new BN(x)
-}
-
-},{"bn.js":37}],31:[function(require,module,exports){
-'use strict'
-
-var rationalize = require('./lib/rationalize')
-
-module.exports = mul
-
-function mul(a, b) {
-  return rationalize(a[0].mul(b[0]), a[1].mul(b[1]))
-}
-
-},{"./lib/rationalize":29}],32:[function(require,module,exports){
-'use strict'
-
-var bnsign = require('./lib/bn-sign')
-
-module.exports = sign
-
-function sign(x) {
-  return bnsign(x[0]) * bnsign(x[1])
-}
-
-},{"./lib/bn-sign":24}],33:[function(require,module,exports){
-'use strict'
-
-var rationalize = require('./lib/rationalize')
-
-module.exports = sub
-
-function sub(a, b) {
-  return rationalize(a[0].mul(b[1]).sub(a[1].mul(b[0])), a[1].mul(b[1]))
-}
-
-},{"./lib/rationalize":29}],34:[function(require,module,exports){
-'use strict'
-
-var bn2num = require('./lib/bn-to-num')
-var ctz = require('./lib/ctz')
-
-module.exports = roundRat
-
-//Round a rational to the closest float
-function roundRat(f) {
-  var a = f[0]
-  var b = f[1]
-  if(a.cmpn(0) === 0) {
-    return 0
-  }
-  var h = a.divmod(b)
-  var iv = h.div
-  var x = bn2num(iv)
-  var ir = h.mod
-  if(ir.cmpn(0) === 0) {
-    return x
-  }
-  if(x) {
-    var s = ctz(x) + 4
-    var y = bn2num(ir.shln(s).divRound(b))
-
-    // flip the sign of y if x is negative
-    if (x<0) {
-      y = -y;
-    }
-
-    return x + y * Math.pow(2, -s)
-  } else {
-    var ybits = b.bitLength() - ir.bitLength() + 53
-    var y = bn2num(ir.shln(ybits).divRound(b))
-    if(ybits < 1023) {
-      return y * Math.pow(2, -ybits)
-    }
-    y *= Math.pow(2, -1023)
-    return y * Math.pow(2, 1023-ybits)
-  }
-}
-
-},{"./lib/bn-to-num":25,"./lib/ctz":26}],35:[function(require,module,exports){
+window.meshLaplacian = require('mesh-laplacian')
+window.csrMatrix = require('csr-matrix')
+window.drawTriangles = require('draw-triangles-2d')
+},{"csr-matrix":8,"draw-triangles-2d":9,"extract-svg-path":11,"load-svg":16,"mesh-laplacian":17,"mesh-reindex":18,"svg-mesh-3d":21,"three-simplicial-complex":88,"unindex-mesh":91}],6:[function(require,module,exports){
 "use strict"
 
-function compileSearch(funcName, predicate, reversed, extraArgs, earlyOut) {
-  var code = [
-    "function ", funcName, "(a,l,h,", extraArgs.join(","),  "){",
-earlyOut ? "" : "var i=", (reversed ? "l-1" : "h+1"),
-";while(l<=h){\
-var m=(l+h)>>>1,x=a[m]"]
-  if(earlyOut) {
-    if(predicate.indexOf("c") < 0) {
-      code.push(";if(x===y){return m}else if(x<=y){")
-    } else {
-      code.push(";var p=c(x,y);if(p===0){return m}else if(p<=0){")
-    }
-  } else {
-    code.push(";if(", predicate, "){i=m;")
+var abs = Math.abs
+  , min = Math.min
+
+function almostEqual(a, b, absoluteError, relativeError) {
+  var d = abs(a - b)
+  if(d <= absoluteError) {
+    return true
   }
-  if(reversed) {
-    code.push("l=m+1}else{h=m-1}")
-  } else {
-    code.push("h=m-1}else{l=m+1}")
+  if(d <= relativeError * min(abs(a), abs(b))) {
+    return true
   }
-  code.push("}")
-  if(earlyOut) {
-    code.push("return -1};")
-  } else {
-    code.push("return i};")
-  }
-  return code.join("")
+  return a === b
 }
 
-function compileBoundsSearch(predicate, reversed, suffix, earlyOut) {
-  var result = new Function([
-  compileSearch("A", "x" + predicate + "y", reversed, ["y"], earlyOut),
-  compileSearch("P", "c(x,y)" + predicate + "0", reversed, ["y", "c"], earlyOut),
-"function dispatchBsearch", suffix, "(a,y,c,l,h){\
-if(typeof(c)==='function'){\
-return P(a,(l===void 0)?0:l|0,(h===void 0)?a.length-1:h|0,y,c)\
-}else{\
-return A(a,(c===void 0)?0:c|0,(l===void 0)?a.length-1:l|0,y)\
-}}\
-return dispatchBsearch", suffix].join(""))
-  return result()
-}
+almostEqual.FLT_EPSILON = 1.19209290e-7
+almostEqual.DBL_EPSILON = 2.2204460492503131e-16
 
-module.exports = {
-  ge: compileBoundsSearch(">=", false, "GE"),
-  gt: compileBoundsSearch(">", false, "GT"),
-  lt: compileBoundsSearch("<", true, "LT"),
-  le: compileBoundsSearch("<=", true, "LE"),
-  eq: compileBoundsSearch("-", true, "EQ", true)
-}
+module.exports = almostEqual
 
-},{}],36:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Bit twiddling hacks for JavaScript.
  *
@@ -2877,7 +1913,1426 @@ exports.nextCombination = function(v) {
 }
 
 
-},{}],37:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+"use strict"
+
+var almostEqual = require('almost-equal')
+var dup         = require('dup')
+
+module.exports = {
+  fromList:       fromList,
+  fromDictionary: fromDictionary,
+  fromDense:      fromDense,
+  fromNDArray:    fromNDArray
+}
+
+var EPSILON = almostEqual.DBL_EPSILON
+
+function CSRMatrix(rows, row_ptrs, columns, column_ptrs, data) {
+  this.rows = rows
+  this.row_ptrs = row_ptrs
+  this.columns = columns
+  this.column_ptrs = column_ptrs
+  this.data = data
+}
+
+var proto = CSRMatrix.prototype
+
+Object.defineProperty(proto, "rowCount", {
+  get: function() {
+    return this.rows[this.rows.length-1]
+  }
+})
+
+Object.defineProperty(proto, "columnCount", {
+  get: function() {
+    return this.columns[this.columns.length-1]
+  }
+})
+
+function applyImpl(rows, row_ptrs, columns, column_ptrs, data, vector, result) {
+  var cptr = 0, dptr = 0, last_r = 0
+  for(var i=0, rlen=rows.length-1; i<rlen; ++i) {
+    var r = rows[i]
+    var next_c = row_ptrs[i+1]
+    var s = 0.0
+    while(++last_r < r) {
+      result[last_r] = 0.0
+    }
+    while(cptr < next_c) {
+      var c = columns[cptr]
+      var next_d = column_ptrs[++cptr]
+      while(dptr < next_d) {
+        s += data[dptr++] * vector[c++]
+      }
+    }
+    result[r] = s
+  }
+  var len = result.length
+  while(++last_r < len) {
+    result[last_r] = 0.0
+  }
+}
+
+proto.apply = function(vector, result) {
+  applyImpl(
+    this.rows,
+    this.row_ptrs,
+    this.columns,
+    this.column_ptrs,
+    this.data,
+    vector,
+    result)
+  return result
+}
+
+proto.transpose = function() {
+  var items = this.toList()
+  for(var i=0; i<items.length; ++i) {
+    var it = items[i]
+    var tmp = it[0]
+    it[0] = it[1]
+    it[1] = tmp
+  }
+  return fromList(items, this.columnCount, this.rowCount)
+}
+
+proto.toList = function() {
+  var result = []
+  for(var i=0, ilen=this.rows.length-1; i<ilen; ++i) {
+    var r = this.rows[i];
+    for(var j=this.row_ptrs[i], jlen=this.row_ptrs[i+1]; j<jlen; ++j) {
+      var c = this.columns[j]
+      for(var k=this.column_ptrs[j], klen=this.column_ptrs[j+1]; k<klen; ++k) {
+        var d = this.data[k]
+        result.push([r, c++, d])
+      }
+    }
+  }
+  return result
+}
+
+proto.toDictionary = function() {
+  var result = {}
+  for(var i=0, ilen=this.rows.length-1; i<ilen; ++i) {
+    var r = this.rows[i];
+    for(var j=this.row_ptrs[i], jlen=this.row_ptrs[i+1]; j<jlen; ++j) {
+      var c = this.columns[j]
+      for(var k=this.column_ptrs[j], klen=this.column_ptrs[j+1]; k<klen; ++k) {
+        var d = this.data[k]
+        result[[r, c++]] = d
+      }
+    }
+  }
+  return result
+}
+
+proto.toDense = function() {
+  var result = dup([this.rowCount, this.columnCount], 0.0)
+  for(var i=0, ilen=this.rows.length-1; i<ilen; ++i) {
+    var r = this.rows[i];
+    for(var j=this.row_ptrs[i], jlen=this.row_ptrs[i+1]; j<jlen; ++j) {
+      var c = this.columns[j]
+      for(var k=this.column_ptrs[j], klen=this.column_ptrs[j+1]; k<klen; ++k) {
+        var d = this.data[k]
+        result[r][c++] = d
+      }
+    }
+  }
+  return result
+}
+
+CSRMatrix.prototype.toNDArray = function(result) {
+  for(var i=0, ilen=this.rows.length-1; i<ilen; ++i) {
+    var r = this.rows[i];
+    for(var j=this.row_ptrs[i], jlen=this.row_ptrs[i+1]; j<jlen; ++j) {
+      var c = this.columns[j]
+      for(var k=this.column_ptrs[j], klen=this.column_ptrs[j+1]; k<klen; ++k) {
+        var d = this.data[k]
+        result.set(r, c++, d)
+      }
+    }
+  }
+  return result
+}
+
+function compareKey(a, b) {
+  return (a[0]-b[0]) || (a[1]-b[1])
+}
+
+function removeDuplicates(items, nrows, ncols) {
+  var i=0, ptr=0
+  items.sort(compareKey)
+  while(i < items.length) {
+    var it = items[i++]
+    if(it[0] >= nrows || it[1] >= ncols) {
+      continue
+    }
+    while(i < items.length && compareKey(items[i], it) === 0) {
+      it[2] += items[i++][2]
+    }
+    if(Math.abs(it[2]) > EPSILON) {
+      items[ptr++] = it
+    }
+  }
+  items.length = ptr
+  return items
+}
+
+function fromList(items, nrows, ncols) {
+  items = removeDuplicates(items, nrows || Infinity, ncols || Infinity)
+  var rows = []
+    , row_ptrs = []
+    , cols = []
+    , col_ptrs = []
+    , data = new Float64Array(items.length)
+  nrows = nrows || 0
+  ncols = ncols || 0
+  for(var i=0; i<items.length; ++i) {
+    var item = items[i]
+    if(i === 0 || item[0] !== items[i-1][0]) {
+      rows.push(item[0])
+      row_ptrs.push(cols.length)
+      cols.push(item[1])
+      col_ptrs.push(i)
+    } else if(item[1] !== items[i-1][1]+1) {
+      cols.push(item[1])
+      col_ptrs.push(i)
+    }
+    nrows = Math.max(nrows, item[0]+1)
+    ncols = Math.max(ncols, item[1]+1)
+    data[i] = item[2]
+  }
+  rows.push(nrows)
+  row_ptrs.push(cols.length)
+  cols.push(ncols)
+  col_ptrs.push(data.length)
+  return new CSRMatrix(
+    new Uint32Array(rows),
+    new Uint32Array(row_ptrs),
+    new Uint32Array(cols),
+    new Uint32Array(col_ptrs),
+    data)
+}
+
+function fromDictionary(dict, rows, cols) {
+  return fromList(Object.keys(dict).map(function(item) {
+    var parts = item.split(',')
+    return [parts[0]|0, parts[1]|0, dict[item]]
+  }), rows, cols)
+}
+
+function fromDense(matrix) {
+  var list = []
+  var rows = matrix.length
+  if(rows === 0) {
+    return fromList([], 0, 0)
+  }
+  var cols = matrix[0].length
+  for(var i=0; i<rows; ++i) {
+    var row = matrix[i]
+    for(var j=0; j<cols; ++j) {
+      var v = row[j]
+      if(Math.abs(v) > EPSILON) {
+        list.push([i,j,v])
+      }
+    }
+  }
+  return fromList(list, rows, cols)
+}
+
+function fromNDArray(array) {
+  var list = []
+  var rows = array.shape[0]
+  var cols = array.shape[1]
+  if(array.stride[1] > array.stride[0]) {
+    for(var j=0; j<cols; ++j) {
+      for(var i=0; i<rows; ++i) {
+        list.push([i, j, array.get(i,j)])
+      }
+    }
+  } else {
+    for(var i=0; i<rows; ++i) {
+      for(var j=0; j<cols; ++j) {
+        list.push([i, j, array.get(i,j)])
+      }
+    }
+  }
+  return fromList(list, rows, cols)
+}
+
+},{"almost-equal":6,"dup":10}],9:[function(require,module,exports){
+module.exports = function drawTriangles(ctx, positions, cells, start, end) {
+    var v = positions
+    start = (start|0)
+    end = typeof end === 'number' ? (end|0) : cells.length
+
+    for (; start < end && start < cells.length; start++) {
+        var f = cells[start]
+        var v0 = v[f[0]],
+            v1 = v[f[1]],
+            v2 = v[f[2]]
+        ctx.moveTo(v0[0], v0[1])
+        ctx.lineTo(v1[0], v1[1])
+        ctx.lineTo(v2[0], v2[1])
+        ctx.lineTo(v0[0], v0[1])
+    }
+}
+},{}],10:[function(require,module,exports){
+"use strict"
+
+function dupe_array(count, value, i) {
+  var c = count[i]|0
+  if(c <= 0) {
+    return []
+  }
+  var result = new Array(c), j
+  if(i === count.length-1) {
+    for(j=0; j<c; ++j) {
+      result[j] = value
+    }
+  } else {
+    for(j=0; j<c; ++j) {
+      result[j] = dupe_array(count, value, i+1)
+    }
+  }
+  return result
+}
+
+function dupe_number(count, value) {
+  var result, i
+  result = new Array(count)
+  for(i=0; i<count; ++i) {
+    result[i] = value
+  }
+  return result
+}
+
+function dupe(count, value) {
+  if(typeof value === "undefined") {
+    value = 0
+  }
+  switch(typeof count) {
+    case "number":
+      if(count > 0) {
+        return dupe_number(count|0, value)
+      }
+    break
+    case "object":
+      if(typeof (count.length) === "number") {
+        return dupe_array(count, value, 0)
+      }
+    break
+  }
+  return []
+}
+
+module.exports = dupe
+},{}],11:[function(require,module,exports){
+var parseXml = require('xml-parse-from-string')
+
+function extractSvgPath (svgDoc) {
+  // concat all the <path> elements to form an SVG path string
+  if (typeof svgDoc === 'string') {
+    svgDoc = parseXml(svgDoc)
+  }
+  if (!svgDoc || typeof svgDoc.getElementsByTagName !== 'function') {
+    throw new Error('could not get an XML document from the specified SVG contents')
+  }
+
+  var paths = Array.prototype.slice.call(svgDoc.getElementsByTagName('path'))
+  return paths.reduce(function (prev, path) {
+    var d = path.getAttribute('d') || ''
+    return prev + ' ' + d.replace(/\s+/g, ' ').trim()
+  }, '').trim()
+}
+
+module.exports = function () {
+  throw new Error('use extract-svg-path/transform to inline SVG contents into your bundle')
+}
+
+module.exports.parse = extractSvgPath
+
+//deprecated
+module.exports.fromString = extractSvgPath
+
+},{"xml-parse-from-string":93}],12:[function(require,module,exports){
+var isFunction = require('is-function')
+
+module.exports = forEach
+
+var toString = Object.prototype.toString
+var hasOwnProperty = Object.prototype.hasOwnProperty
+
+function forEach(list, iterator, context) {
+    if (!isFunction(iterator)) {
+        throw new TypeError('iterator must be a function')
+    }
+
+    if (arguments.length < 3) {
+        context = this
+    }
+    
+    if (toString.call(list) === '[object Array]')
+        forEachArray(list, iterator, context)
+    else if (typeof list === 'string')
+        forEachString(list, iterator, context)
+    else
+        forEachObject(list, iterator, context)
+}
+
+function forEachArray(array, iterator, context) {
+    for (var i = 0, len = array.length; i < len; i++) {
+        if (hasOwnProperty.call(array, i)) {
+            iterator.call(context, array[i], i, array)
+        }
+    }
+}
+
+function forEachString(string, iterator, context) {
+    for (var i = 0, len = string.length; i < len; i++) {
+        // no such thing as a sparse string.
+        iterator.call(context, string.charAt(i), i, string)
+    }
+}
+
+function forEachObject(object, iterator, context) {
+    for (var k in object) {
+        if (hasOwnProperty.call(object, k)) {
+            iterator.call(context, object[k], k, object)
+        }
+    }
+}
+
+},{"is-function":15}],13:[function(require,module,exports){
+(function (global){
+if (typeof window !== "undefined") {
+    module.exports = window;
+} else if (typeof global !== "undefined") {
+    module.exports = global;
+} else if (typeof self !== "undefined"){
+    module.exports = self;
+} else {
+    module.exports = {};
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],14:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],15:[function(require,module,exports){
+module.exports = isFunction
+
+var toString = Object.prototype.toString
+
+function isFunction (fn) {
+  var string = toString.call(fn)
+  return string === '[object Function]' ||
+    (typeof fn === 'function' && string !== '[object RegExp]') ||
+    (typeof window !== 'undefined' &&
+     // IE8 and below
+     (fn === window.setTimeout ||
+      fn === window.alert ||
+      fn === window.confirm ||
+      fn === window.prompt))
+};
+
+},{}],16:[function(require,module,exports){
+var xhr = require('xhr');
+
+module.exports = function (opts, cb) {
+    if (typeof opts === 'string') opts = { uri: opts };
+    
+    xhr(opts, function (err, res, body) {
+        if (err) return cb(err);
+        if (!/^2/.test(res.statusCode)) {
+            return cb(new Error('http status code: ' + res.statusCode));
+        }
+        var div = document.createElement('div');
+        div.innerHTML = body;
+        var svg = div.querySelector('svg');
+        if (!svg) return cb(new Error('svg not present in resource'));
+        cb(null, svg);
+    });
+};
+
+},{"xhr":92}],17:[function(require,module,exports){
+'use strict'
+
+var pool = require('typedarray-pool')
+
+module.exports = meshLaplacian
+
+function hypot(x, y, z) {
+  return Math.sqrt(
+    Math.pow(x, 2) +
+    Math.pow(y, 2) +
+    Math.pow(z, 2))
+}
+
+function compareEntry(a, b) {
+  return (a[0]-b[0]) || (a[1]-b[1])
+}
+
+function meshLaplacian(cells, positions) {
+  var numVerts = positions.length
+  var numCells = cells.length
+
+  var areas = pool.mallocDouble(numVerts)
+  for(var i=0; i<numVerts; ++i) {
+    areas[i] = 0
+  }
+
+  var entries = []
+  for(var i=0; i<numCells; ++i) {
+    var cell = cells[i]
+    var ia = cell[0]
+    var ib = cell[1]
+    var ic = cell[2]
+
+    var a  = positions[ia]
+    var b  = positions[ib]
+    var c  = positions[ic]
+
+    var abx = a[0] - b[0]
+    var aby = a[1] - b[1]
+    var abz = a[2] - b[2]
+
+    var bcx = b[0] - c[0]
+    var bcy = b[1] - c[1]
+    var bcz = b[2] - c[2]
+
+    var cax = c[0] - a[0]
+    var cay = c[1] - a[1]
+    var caz = c[2] - a[2]
+
+    var area = 0.5 * hypot(
+      aby * caz - abz * cay,
+      abz * cax - abx * caz,
+      abx * cay - aby * cax)
+
+    //Skip thin triangles
+    if(area < 1e-8) {
+      continue
+    }
+
+    var w = -0.5 / area
+    var wa = w * (abx * cax + aby * cay + abz * caz)
+    var wb = w * (bcx * abx + bcy * aby + bcz * abz)
+    var wc = w * (cax * bcx + cay * bcy + caz * bcz)
+
+    var varea = area / 3
+    areas[ia] += varea
+    areas[ib] += varea
+    areas[ic] += varea
+
+    entries.push(
+      [ib,ic,wa],
+      [ic,ib,wa],
+      [ic,ia,wb],
+      [ia,ic,wb],
+      [ia,ib,wc],
+      [ib,ia,wc]
+    )
+  }
+
+  var weights = pool.mallocDouble(numVerts)
+  for(var i=0; i<numVerts; ++i) {
+    weights[i] = 0
+  }
+
+  entries.sort(compareEntry)
+
+  var ptr = 0
+  for(var i=0; i<entries.length; ) {
+    var entry = entries[i++]
+    while(
+      i < entries.length &&
+      entries[i][0] === entry[0] &&
+      entries[i][1] === entry[1] ) {
+        entry[2] += entries[i++][2]
+    }
+    entry[2] /= areas[entry[0]]
+    weights[entry[0]] += entry[2]
+    entries[ptr++] = entry
+  }
+  entries.length = ptr
+
+  for(var i=0; i<numVerts; ++i) {
+    entries.push([i, i, -weights[i]])
+  }
+
+  pool.free(areas)
+  pool.free(weights)
+
+  return entries
+}
+
+},{"typedarray-pool":90}],18:[function(require,module,exports){
+module.exports = reindex
+
+function reindex(array) {
+  var pos = []
+  var cel = []
+
+  var i = 0
+  var c = 0
+  while (i < array.length) {
+    cel.push([c++, c++, c++])
+    pos.push([
+        array[i++]
+      , array[i++]
+      , array[i++]
+    ], [
+        array[i++]
+      , array[i++]
+      , array[i++]
+    ], [
+        array[i++]
+      , array[i++]
+      , array[i++]
+    ])
+  }
+
+  return {
+      positions: pos
+    , cells: cel
+  }
+}
+
+},{}],19:[function(require,module,exports){
+module.exports = once
+
+once.proto = once(function () {
+  Object.defineProperty(Function.prototype, 'once', {
+    value: function () {
+      return once(this)
+    },
+    configurable: true
+  })
+})
+
+function once (fn) {
+  var called = false
+  return function () {
+    if (called) return
+    called = true
+    return fn.apply(this, arguments)
+  }
+}
+
+},{}],20:[function(require,module,exports){
+var trim = require('trim')
+  , forEach = require('for-each')
+  , isArray = function(arg) {
+      return Object.prototype.toString.call(arg) === '[object Array]';
+    }
+
+module.exports = function (headers) {
+  if (!headers)
+    return {}
+
+  var result = {}
+
+  forEach(
+      trim(headers).split('\n')
+    , function (row) {
+        var index = row.indexOf(':')
+          , key = trim(row.slice(0, index)).toLowerCase()
+          , value = trim(row.slice(index + 1))
+
+        if (typeof(result[key]) === 'undefined') {
+          result[key] = value
+        } else if (isArray(result[key])) {
+          result[key].push(value)
+        } else {
+          result[key] = [ result[key], value ]
+        }
+      }
+  )
+
+  return result
+}
+},{"for-each":12,"trim":89}],21:[function(require,module,exports){
+var parseSVG = require('parse-svg-path')
+var getContours = require('svg-path-contours')
+var cdt2d = require('cdt2d')
+var cleanPSLG = require('clean-pslg')
+var getBounds = require('bound-points')
+var normalize = require('normalize-path-scale')
+var random = require('random-float')
+var assign = require('object-assign')
+var simplify = require('simplify-path')
+
+module.exports = svgMesh3d
+function svgMesh3d (svgPath, opt) {
+  if (typeof svgPath !== 'string') {
+    throw new TypeError('must provide a string as first parameter')
+  }
+  
+  opt = assign({
+    delaunay: true,
+    clean: true,
+    exterior: false,
+    randomization: 0,
+    simplify: 0,
+    scale: 1
+  }, opt)
+  
+  var i
+  // parse string as a list of operations
+  var svg = parseSVG(svgPath)
+  
+  // convert curves into discrete points
+  var contours = getContours(svg, opt.scale)
+  
+  // optionally simplify the path for faster triangulation and/or aesthetics
+  if (opt.simplify > 0 && typeof opt.simplify === 'number') {
+    for (i = 0; i < contours.length; i++) {
+      contours[i] = simplify(contours[i], opt.simplify)
+    }
+  }
+  
+  // prepare for triangulation
+  var polyline = denestPolyline(contours)
+  var positions = polyline.positions
+  var bounds = getBounds(positions)
+
+  // optionally add random points for aesthetics
+  var randomization = opt.randomization
+  if (typeof randomization === 'number' && randomization > 0) {
+    addRandomPoints(positions, bounds, randomization)
+  }
+  
+  var loops = polyline.edges
+  var edges = []
+  for (i = 0; i < loops.length; ++i) {
+    var loop = loops[i]
+    for (var j = 0; j < loop.length; ++j) {
+      edges.push([loop[j], loop[(j + 1) % loop.length]])
+    }
+  }
+
+  // this updates points/edges so that they now form a valid PSLG 
+  if (opt.clean !== false) {
+    cleanPSLG(positions, edges)
+  }
+
+  // triangulate mesh
+  var cells = cdt2d(positions, edges, opt)
+
+  // rescale to [-1 ... 1]
+  normalize(positions, bounds)
+
+  // convert to 3D representation and flip on Y axis for convenience w/ OpenGL
+  to3D(positions)
+
+  return {
+    positions: positions,
+    cells: cells
+  }
+}
+
+function to3D (positions) {
+  for (var i = 0; i < positions.length; i++) {
+    var xy = positions[i]
+    xy[1] *= -1
+    xy[2] = xy[2] || 0
+  }
+}
+
+function addRandomPoints (positions, bounds, count) {
+  var min = bounds[0]
+  var max = bounds[1]
+
+  for (var i = 0; i < count; i++) {
+    positions.push([ // random [ x, y ]
+      random(min[0], max[0]),
+      random(min[1], max[1])
+    ])
+  }
+}
+
+function denestPolyline (nested) {
+  var positions = []
+  var edges = []
+
+  for (var i = 0; i < nested.length; i++) {
+    var path = nested[i]
+    var loop = []
+    for (var j = 0; j < path.length; j++) {
+      var pos = path[j]
+      var idx = positions.indexOf(pos)
+      if (idx === -1) {
+        positions.push(pos)
+        idx = positions.length - 1
+      }
+      loop.push(idx)
+    }
+    edges.push(loop)
+  }
+  return {
+    positions: positions,
+    edges: edges
+  }
+}
+
+},{"bound-points":44,"cdt2d":52,"clean-pslg":57,"normalize-path-scale":63,"object-assign":65,"parse-svg-path":66,"random-float":67,"simplify-path":79,"svg-path-contours":81}],22:[function(require,module,exports){
+
+module.exports = absolutize
+
+/**
+ * redefine `path` with absolute coordinates
+ *
+ * @param {Array} path
+ * @return {Array}
+ */
+
+function absolutize(path){
+	var startX = 0
+	var startY = 0
+	var x = 0
+	var y = 0
+
+	return path.map(function(seg){
+		seg = seg.slice()
+		var type = seg[0]
+		var command = type.toUpperCase()
+
+		// is relative
+		if (type != command) {
+			seg[0] = command
+			switch (type) {
+				case 'a':
+					seg[6] += x
+					seg[7] += y
+					break
+				case 'v':
+					seg[1] += y
+					break
+				case 'h':
+					seg[1] += x
+					break
+				default:
+					for (var i = 1; i < seg.length;) {
+						seg[i++] += x
+						seg[i++] += y
+					}
+			}
+		}
+
+		// update cursor state
+		switch (command) {
+			case 'Z':
+				x = startX
+				y = startY
+				break
+			case 'H':
+				x = seg[1]
+				break
+			case 'V':
+				y = seg[1]
+				break
+			case 'M':
+				x = startX = seg[1]
+				y = startY = seg[2]
+				break
+			default:
+				x = seg[seg.length - 2]
+				y = seg[seg.length - 1]
+		}
+
+		return seg
+	})
+}
+
+},{}],23:[function(require,module,exports){
+function clone(point) { //TODO: use gl-vec2 for this
+    return [point[0], point[1]]
+}
+
+function vec2(x, y) {
+    return [x, y]
+}
+
+module.exports = function createBezierBuilder(opt) {
+    opt = opt||{}
+
+    var RECURSION_LIMIT = typeof opt.recursion === 'number' ? opt.recursion : 8
+    var FLT_EPSILON = typeof opt.epsilon === 'number' ? opt.epsilon : 1.19209290e-7
+    var PATH_DISTANCE_EPSILON = typeof opt.pathEpsilon === 'number' ? opt.pathEpsilon : 1.0
+
+    var curve_angle_tolerance_epsilon = typeof opt.angleEpsilon === 'number' ? opt.angleEpsilon : 0.01
+    var m_angle_tolerance = opt.angleTolerance || 0
+    var m_cusp_limit = opt.cuspLimit || 0
+
+    return function bezierCurve(start, c1, c2, end, scale, points) {
+        if (!points)
+            points = []
+
+        scale = typeof scale === 'number' ? scale : 1.0
+        var distanceTolerance = PATH_DISTANCE_EPSILON / scale
+        distanceTolerance *= distanceTolerance
+        begin(start, c1, c2, end, points, distanceTolerance)
+        return points
+    }
+
+
+    ////// Based on:
+    ////// https://github.com/pelson/antigrain/blob/master/agg-2.4/src/agg_curves.cpp
+
+    function begin(start, c1, c2, end, points, distanceTolerance) {
+        points.push(clone(start))
+        var x1 = start[0],
+            y1 = start[1],
+            x2 = c1[0],
+            y2 = c1[1],
+            x3 = c2[0],
+            y3 = c2[1],
+            x4 = end[0],
+            y4 = end[1]
+        recursive(x1, y1, x2, y2, x3, y3, x4, y4, points, distanceTolerance, 0)
+        points.push(clone(end))
+    }
+
+    function recursive(x1, y1, x2, y2, x3, y3, x4, y4, points, distanceTolerance, level) {
+        if(level > RECURSION_LIMIT) 
+            return
+
+        var pi = Math.PI
+
+        // Calculate all the mid-points of the line segments
+        //----------------------
+        var x12   = (x1 + x2) / 2
+        var y12   = (y1 + y2) / 2
+        var x23   = (x2 + x3) / 2
+        var y23   = (y2 + y3) / 2
+        var x34   = (x3 + x4) / 2
+        var y34   = (y3 + y4) / 2
+        var x123  = (x12 + x23) / 2
+        var y123  = (y12 + y23) / 2
+        var x234  = (x23 + x34) / 2
+        var y234  = (y23 + y34) / 2
+        var x1234 = (x123 + x234) / 2
+        var y1234 = (y123 + y234) / 2
+
+        if(level > 0) { // Enforce subdivision first time
+            // Try to approximate the full cubic curve by a single straight line
+            //------------------
+            var dx = x4-x1
+            var dy = y4-y1
+
+            var d2 = Math.abs((x2 - x4) * dy - (y2 - y4) * dx)
+            var d3 = Math.abs((x3 - x4) * dy - (y3 - y4) * dx)
+
+            var da1, da2
+
+            if(d2 > FLT_EPSILON && d3 > FLT_EPSILON) {
+                // Regular care
+                //-----------------
+                if((d2 + d3)*(d2 + d3) <= distanceTolerance * (dx*dx + dy*dy)) {
+                    // If the curvature doesn't exceed the distanceTolerance value
+                    // we tend to finish subdivisions.
+                    //----------------------
+                    if(m_angle_tolerance < curve_angle_tolerance_epsilon) {
+                        points.push(vec2(x1234, y1234))
+                        return
+                    }
+
+                    // Angle & Cusp Condition
+                    //----------------------
+                    var a23 = Math.atan2(y3 - y2, x3 - x2)
+                    da1 = Math.abs(a23 - Math.atan2(y2 - y1, x2 - x1))
+                    da2 = Math.abs(Math.atan2(y4 - y3, x4 - x3) - a23)
+                    if(da1 >= pi) da1 = 2*pi - da1
+                    if(da2 >= pi) da2 = 2*pi - da2
+
+                    if(da1 + da2 < m_angle_tolerance) {
+                        // Finally we can stop the recursion
+                        //----------------------
+                        points.push(vec2(x1234, y1234))
+                        return
+                    }
+
+                    if(m_cusp_limit !== 0.0) {
+                        if(da1 > m_cusp_limit) {
+                            points.push(vec2(x2, y2))
+                            return
+                        }
+
+                        if(da2 > m_cusp_limit) {
+                            points.push(vec2(x3, y3))
+                            return
+                        }
+                    }
+                }
+            }
+            else {
+                if(d2 > FLT_EPSILON) {
+                    // p1,p3,p4 are collinear, p2 is considerable
+                    //----------------------
+                    if(d2 * d2 <= distanceTolerance * (dx*dx + dy*dy)) {
+                        if(m_angle_tolerance < curve_angle_tolerance_epsilon) {
+                            points.push(vec2(x1234, y1234))
+                            return
+                        }
+
+                        // Angle Condition
+                        //----------------------
+                        da1 = Math.abs(Math.atan2(y3 - y2, x3 - x2) - Math.atan2(y2 - y1, x2 - x1))
+                        if(da1 >= pi) da1 = 2*pi - da1
+
+                        if(da1 < m_angle_tolerance) {
+                            points.push(vec2(x2, y2))
+                            points.push(vec2(x3, y3))
+                            return
+                        }
+
+                        if(m_cusp_limit !== 0.0) {
+                            if(da1 > m_cusp_limit) {
+                                points.push(vec2(x2, y2))
+                                return
+                            }
+                        }
+                    }
+                }
+                else if(d3 > FLT_EPSILON) {
+                    // p1,p2,p4 are collinear, p3 is considerable
+                    //----------------------
+                    if(d3 * d3 <= distanceTolerance * (dx*dx + dy*dy)) {
+                        if(m_angle_tolerance < curve_angle_tolerance_epsilon) {
+                            points.push(vec2(x1234, y1234))
+                            return
+                        }
+
+                        // Angle Condition
+                        //----------------------
+                        da1 = Math.abs(Math.atan2(y4 - y3, x4 - x3) - Math.atan2(y3 - y2, x3 - x2))
+                        if(da1 >= pi) da1 = 2*pi - da1
+
+                        if(da1 < m_angle_tolerance) {
+                            points.push(vec2(x2, y2))
+                            points.push(vec2(x3, y3))
+                            return
+                        }
+
+                        if(m_cusp_limit !== 0.0) {
+                            if(da1 > m_cusp_limit)
+                            {
+                                points.push(vec2(x3, y3))
+                                return
+                            }
+                        }
+                    }
+                }
+                else {
+                    // Collinear case
+                    //-----------------
+                    dx = x1234 - (x1 + x4) / 2
+                    dy = y1234 - (y1 + y4) / 2
+                    if(dx*dx + dy*dy <= distanceTolerance) {
+                        points.push(vec2(x1234, y1234))
+                        return
+                    }
+                }
+            }
+        }
+
+        // Continue subdivision
+        //----------------------
+        recursive(x1, y1, x12, y12, x123, y123, x1234, y1234, points, distanceTolerance, level + 1) 
+        recursive(x1234, y1234, x234, y234, x34, y34, x4, y4, points, distanceTolerance, level + 1) 
+    }
+}
+
+},{}],24:[function(require,module,exports){
+module.exports = require('./function')()
+},{"./function":23}],25:[function(require,module,exports){
+'use strict'
+
+var rationalize = require('./lib/rationalize')
+
+module.exports = add
+
+function add(a, b) {
+  return rationalize(
+    a[0].mul(b[1]).add(b[0].mul(a[1])),
+    a[1].mul(b[1]))
+}
+
+},{"./lib/rationalize":35}],26:[function(require,module,exports){
+'use strict'
+
+module.exports = cmp
+
+function cmp(a, b) {
+    return a[0].mul(b[1]).cmp(b[0].mul(a[1]))
+}
+
+},{}],27:[function(require,module,exports){
+'use strict'
+
+var rationalize = require('./lib/rationalize')
+
+module.exports = div
+
+function div(a, b) {
+  return rationalize(a[0].mul(b[1]), a[1].mul(b[0]))
+}
+
+},{"./lib/rationalize":35}],28:[function(require,module,exports){
+'use strict'
+
+var isRat = require('./is-rat')
+var isBN = require('./lib/is-bn')
+var num2bn = require('./lib/num-to-bn')
+var str2bn = require('./lib/str-to-bn')
+var rationalize = require('./lib/rationalize')
+var div = require('./div')
+
+module.exports = makeRational
+
+function makeRational(numer, denom) {
+  if(isRat(numer)) {
+    if(denom) {
+      return div(numer, makeRational(denom))
+    }
+    return [numer[0].clone(), numer[1].clone()]
+  }
+  var shift = 0
+  var a, b
+  if(isBN(numer)) {
+    a = numer.clone()
+  } else if(typeof numer === 'string') {
+    a = str2bn(numer)
+  } else if(numer === 0) {
+    return [num2bn(0), num2bn(1)]
+  } else if(numer === Math.floor(numer)) {
+    a = num2bn(numer)
+  } else {
+    while(numer !== Math.floor(numer)) {
+      numer = numer * Math.pow(2, 256)
+      shift -= 256
+    }
+    a = num2bn(numer)
+  }
+  if(isRat(denom)) {
+    a.mul(denom[1])
+    b = denom[0].clone()
+  } else if(isBN(denom)) {
+    b = denom.clone()
+  } else if(typeof denom === 'string') {
+    b = str2bn(denom)
+  } else if(!denom) {
+    b = num2bn(1)
+  } else if(denom === Math.floor(denom)) {
+    b = num2bn(denom)
+  } else {
+    while(denom !== Math.floor(denom)) {
+      denom = denom * Math.pow(2, 256)
+      shift += 256
+    }
+    b = num2bn(denom)
+  }
+  if(shift > 0) {
+    a = a.shln(shift)
+  } else if(shift < 0) {
+    b = b.shln(-shift)
+  }
+  return rationalize(a, b)
+}
+
+},{"./div":27,"./is-rat":29,"./lib/is-bn":33,"./lib/num-to-bn":34,"./lib/rationalize":35,"./lib/str-to-bn":36}],29:[function(require,module,exports){
+'use strict'
+
+var isBN = require('./lib/is-bn')
+
+module.exports = isRat
+
+function isRat(x) {
+  return Array.isArray(x) && x.length === 2 && isBN(x[0]) && isBN(x[1])
+}
+
+},{"./lib/is-bn":33}],30:[function(require,module,exports){
+'use strict'
+
+var bn = require('bn.js')
+
+module.exports = sign
+
+function sign(x) {
+  return x.cmp(new bn(0))
+}
+
+},{"bn.js":43}],31:[function(require,module,exports){
+'use strict'
+
+module.exports = bn2num
+
+//TODO: Make this better
+function bn2num(b) {
+  var l = b.length
+  var words = b.words
+  var out = 0
+  if (l === 1) {
+    out = words[0]
+  } else if (l === 2) {
+    out = words[0] + (words[1] * 0x4000000)
+  } else {
+    var out = 0
+    for (var i = 0; i < l; i++) {
+      var w = words[i]
+      out += w * Math.pow(0x4000000, i)
+    }
+  }
+  return b.sign ? -out : out
+}
+
+},{}],32:[function(require,module,exports){
+'use strict'
+
+var db = require('double-bits')
+var ctz = require('bit-twiddle').countTrailingZeros
+
+module.exports = ctzNumber
+
+//Counts the number of trailing zeros
+function ctzNumber(x) {
+  var l = ctz(db.lo(x))
+  if(l < 32) {
+    return l
+  }
+  var h = ctz(db.hi(x))
+  if(h > 20) {
+    return 52
+  }
+  return h + 32
+}
+
+},{"bit-twiddle":42,"double-bits":60}],33:[function(require,module,exports){
+'use strict'
+
+var BN = require('bn.js')
+
+module.exports = isBN
+
+//Test if x is a bignumber
+//FIXME: obviously this is the wrong way to do it
+function isBN(x) {
+  return x && typeof x === 'object' && Boolean(x.words)
+}
+
+},{"bn.js":43}],34:[function(require,module,exports){
+'use strict'
+
+var BN = require('bn.js')
+var db = require('double-bits')
+
+module.exports = num2bn
+
+function num2bn(x) {
+  var e = db.exponent(x)
+  if(e < 52) {
+    return new BN(x)
+  } else {
+    return (new BN(x * Math.pow(2, 52-e))).shln(e-52)
+  }
+}
+
+},{"bn.js":43,"double-bits":60}],35:[function(require,module,exports){
+'use strict'
+
+var num2bn = require('./num-to-bn')
+var sign = require('./bn-sign')
+
+module.exports = rationalize
+
+function rationalize(numer, denom) {
+  var snumer = sign(numer)
+  var sdenom = sign(denom)
+  if(snumer === 0) {
+    return [num2bn(0), num2bn(1)]
+  }
+  if(sdenom === 0) {
+    return [num2bn(0), num2bn(0)]
+  }
+  if(sdenom < 0) {
+    numer = numer.neg()
+    denom = denom.neg()
+  }
+  var d = numer.gcd(denom)
+  if(d.cmpn(1)) {
+    return [ numer.div(d), denom.div(d) ]
+  }
+  return [ numer, denom ]
+}
+
+},{"./bn-sign":30,"./num-to-bn":34}],36:[function(require,module,exports){
+'use strict'
+
+var BN = require('bn.js')
+
+module.exports = str2BN
+
+function str2BN(x) {
+  return new BN(x)
+}
+
+},{"bn.js":43}],37:[function(require,module,exports){
+'use strict'
+
+var rationalize = require('./lib/rationalize')
+
+module.exports = mul
+
+function mul(a, b) {
+  return rationalize(a[0].mul(b[0]), a[1].mul(b[1]))
+}
+
+},{"./lib/rationalize":35}],38:[function(require,module,exports){
+'use strict'
+
+var bnsign = require('./lib/bn-sign')
+
+module.exports = sign
+
+function sign(x) {
+  return bnsign(x[0]) * bnsign(x[1])
+}
+
+},{"./lib/bn-sign":30}],39:[function(require,module,exports){
+'use strict'
+
+var rationalize = require('./lib/rationalize')
+
+module.exports = sub
+
+function sub(a, b) {
+  return rationalize(a[0].mul(b[1]).sub(a[1].mul(b[0])), a[1].mul(b[1]))
+}
+
+},{"./lib/rationalize":35}],40:[function(require,module,exports){
+'use strict'
+
+var bn2num = require('./lib/bn-to-num')
+var ctz = require('./lib/ctz')
+
+module.exports = roundRat
+
+//Round a rational to the closest float
+function roundRat(f) {
+  var a = f[0]
+  var b = f[1]
+  if(a.cmpn(0) === 0) {
+    return 0
+  }
+  var h = a.divmod(b)
+  var iv = h.div
+  var x = bn2num(iv)
+  var ir = h.mod
+  if(ir.cmpn(0) === 0) {
+    return x
+  }
+  if(x) {
+    var s = ctz(x) + 4
+    var y = bn2num(ir.shln(s).divRound(b))
+
+    // flip the sign of y if x is negative
+    if (x<0) {
+      y = -y;
+    }
+
+    return x + y * Math.pow(2, -s)
+  } else {
+    var ybits = b.bitLength() - ir.bitLength() + 53
+    var y = bn2num(ir.shln(ybits).divRound(b))
+    if(ybits < 1023) {
+      return y * Math.pow(2, -ybits)
+    }
+    y *= Math.pow(2, -1023)
+    return y * Math.pow(2, 1023-ybits)
+  }
+}
+
+},{"./lib/bn-to-num":31,"./lib/ctz":32}],41:[function(require,module,exports){
+"use strict"
+
+function compileSearch(funcName, predicate, reversed, extraArgs, earlyOut) {
+  var code = [
+    "function ", funcName, "(a,l,h,", extraArgs.join(","),  "){",
+earlyOut ? "" : "var i=", (reversed ? "l-1" : "h+1"),
+";while(l<=h){\
+var m=(l+h)>>>1,x=a[m]"]
+  if(earlyOut) {
+    if(predicate.indexOf("c") < 0) {
+      code.push(";if(x===y){return m}else if(x<=y){")
+    } else {
+      code.push(";var p=c(x,y);if(p===0){return m}else if(p<=0){")
+    }
+  } else {
+    code.push(";if(", predicate, "){i=m;")
+  }
+  if(reversed) {
+    code.push("l=m+1}else{h=m-1}")
+  } else {
+    code.push("h=m-1}else{l=m+1}")
+  }
+  code.push("}")
+  if(earlyOut) {
+    code.push("return -1};")
+  } else {
+    code.push("return i};")
+  }
+  return code.join("")
+}
+
+function compileBoundsSearch(predicate, reversed, suffix, earlyOut) {
+  var result = new Function([
+  compileSearch("A", "x" + predicate + "y", reversed, ["y"], earlyOut),
+  compileSearch("P", "c(x,y)" + predicate + "0", reversed, ["y", "c"], earlyOut),
+"function dispatchBsearch", suffix, "(a,y,c,l,h){\
+if(typeof(c)==='function'){\
+return P(a,(l===void 0)?0:l|0,(h===void 0)?a.length-1:h|0,y,c)\
+}else{\
+return A(a,(c===void 0)?0:c|0,(l===void 0)?a.length-1:l|0,y)\
+}}\
+return dispatchBsearch", suffix].join(""))
+  return result()
+}
+
+module.exports = {
+  ge: compileBoundsSearch(">=", false, "GE"),
+  gt: compileBoundsSearch(">", false, "GT"),
+  lt: compileBoundsSearch("<", true, "LT"),
+  le: compileBoundsSearch("<=", true, "LE"),
+  eq: compileBoundsSearch("-", true, "EQ", true)
+}
+
+},{}],42:[function(require,module,exports){
+arguments[4][7][0].apply(exports,arguments)
+},{"dup":7}],43:[function(require,module,exports){
 (function (module, exports) {
 
 'use strict';
@@ -5197,7 +5652,7 @@ Mont.prototype.invm = function invm(a) {
 
 })(typeof module === 'undefined' || module, this);
 
-},{}],38:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 'use strict'
 
 module.exports = findBounds
@@ -5220,7 +5675,7 @@ function findBounds(points) {
   }
   return [lo, hi]
 }
-},{}],39:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict'
 
 module.exports = boxIntersectWrapper
@@ -5359,7 +5814,7 @@ function boxIntersectWrapper(arg0, arg1, arg2) {
       throw new Error('box-intersect: Invalid arguments')
   }
 }
-},{"./lib/intersect":41,"./lib/sweep":45,"typedarray-pool":78}],40:[function(require,module,exports){
+},{"./lib/intersect":47,"./lib/sweep":51,"typedarray-pool":84}],46:[function(require,module,exports){
 'use strict'
 
 var DIMENSION   = 'd'
@@ -5504,7 +5959,7 @@ function bruteForcePlanner(full) {
 
 exports.partial = bruteForcePlanner(false)
 exports.full    = bruteForcePlanner(true)
-},{}],41:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 'use strict'
 
 module.exports = boxIntersectIter
@@ -5999,7 +6454,7 @@ function boxIntersectIter(
     }
   }
 }
-},{"./brute":40,"./median":42,"./partition":43,"./sweep":45,"bit-twiddle":36,"typedarray-pool":78}],42:[function(require,module,exports){
+},{"./brute":46,"./median":48,"./partition":49,"./sweep":51,"bit-twiddle":42,"typedarray-pool":84}],48:[function(require,module,exports){
 'use strict'
 
 module.exports = findMedian
@@ -6142,7 +6597,7 @@ function findMedian(d, axis, start, end, boxes, ids) {
     start, mid, boxes, ids,
     boxes[elemSize*mid+axis])
 }
-},{"./partition":43}],43:[function(require,module,exports){
+},{"./partition":49}],49:[function(require,module,exports){
 'use strict'
 
 module.exports = genPartition
@@ -6163,7 +6618,7 @@ function genPartition(predicate, args) {
         .replace('$', predicate))
   return Function.apply(void 0, fargs)
 }
-},{}],44:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 
 //This code is extracted from ndarray-sort
@@ -6400,7 +6855,7 @@ function quickSort(left, right, data) {
     quickSort(less, great, data);
   }
 }
-},{}],45:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 'use strict'
 
 module.exports = {
@@ -6835,7 +7290,7 @@ red_loop:
     }
   }
 }
-},{"./sort":44,"bit-twiddle":36,"typedarray-pool":78}],46:[function(require,module,exports){
+},{"./sort":50,"bit-twiddle":42,"typedarray-pool":84}],52:[function(require,module,exports){
 'use strict'
 
 var monotoneTriangulate = require('./lib/monotone')
@@ -6919,7 +7374,7 @@ function cdt2d(points, edges, options) {
   }
 }
 
-},{"./lib/delaunay":47,"./lib/filter":48,"./lib/monotone":49,"./lib/triangulation":50}],47:[function(require,module,exports){
+},{"./lib/delaunay":53,"./lib/filter":54,"./lib/monotone":55,"./lib/triangulation":56}],53:[function(require,module,exports){
 'use strict'
 
 var inCircle = require('robust-in-sphere')[4]
@@ -7036,7 +7491,7 @@ function delaunayRefine(points, triangulation) {
   }
 }
 
-},{"binary-search-bounds":35,"robust-in-sphere":66}],48:[function(require,module,exports){
+},{"binary-search-bounds":41,"robust-in-sphere":72}],54:[function(require,module,exports){
 'use strict'
 
 var bsearch = require('binary-search-bounds')
@@ -7218,7 +7673,7 @@ function classifyFaces(triangulation, target, infinity) {
   return result
 }
 
-},{"binary-search-bounds":35}],49:[function(require,module,exports){
+},{"binary-search-bounds":41}],55:[function(require,module,exports){
 'use strict'
 
 var bsearch = require('binary-search-bounds')
@@ -7407,7 +7862,7 @@ function monotoneTriangulate(points, edges) {
   return cells
 }
 
-},{"binary-search-bounds":35,"robust-orientation":67}],50:[function(require,module,exports){
+},{"binary-search-bounds":41,"robust-orientation":73}],56:[function(require,module,exports){
 'use strict'
 
 var bsearch = require('binary-search-bounds')
@@ -7513,7 +7968,7 @@ function createTriangulation(numVerts, edges) {
   return new Triangulation(stars, edges)
 }
 
-},{"binary-search-bounds":35}],51:[function(require,module,exports){
+},{"binary-search-bounds":41}],57:[function(require,module,exports){
 'use strict'
 
 module.exports = cleanPSLG
@@ -7875,7 +8330,7 @@ function cleanPSLG(points, edges, colors) {
   return modified
 }
 
-},{"./lib/rat-seg-intersect":52,"big-rat":22,"big-rat/cmp":20,"big-rat/to-float":34,"box-intersect":39,"compare-cell":53,"nextafter":56,"rat-vec":63,"robust-segment-intersect":69,"union-find":79}],52:[function(require,module,exports){
+},{"./lib/rat-seg-intersect":58,"big-rat":28,"big-rat/cmp":26,"big-rat/to-float":40,"box-intersect":45,"compare-cell":59,"nextafter":62,"rat-vec":69,"robust-segment-intersect":75,"union-find":85}],58:[function(require,module,exports){
 'use strict'
 
 //TODO: Move this to a separate module
@@ -7921,7 +8376,7 @@ function solveIntersection(a, b, c, d) {
   return rvAdd(a, rvMuls(ba, t))
 }
 
-},{"big-rat/div":21,"big-rat/mul":31,"big-rat/sign":32,"big-rat/sub":33,"big-rat/to-float":34,"rat-vec/add":62,"rat-vec/muls":64,"rat-vec/sub":65}],53:[function(require,module,exports){
+},{"big-rat/div":27,"big-rat/mul":37,"big-rat/sign":38,"big-rat/sub":39,"big-rat/to-float":40,"rat-vec/add":68,"rat-vec/muls":70,"rat-vec/sub":71}],59:[function(require,module,exports){
 module.exports = compareCells
 
 var min = Math.min
@@ -7977,7 +8432,7 @@ function compareCells(a, b) {
   }
 }
 
-},{}],54:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 (function (Buffer){
 var hasTypedArrays = false
 if(typeof Float64Array !== "undefined") {
@@ -8081,57 +8536,9 @@ module.exports.denormalized = function(n) {
   return !(hi & 0x7ff00000)
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":2}],55:[function(require,module,exports){
-"use strict"
-
-function dupe_array(count, value, i) {
-  var c = count[i]|0
-  if(c <= 0) {
-    return []
-  }
-  var result = new Array(c), j
-  if(i === count.length-1) {
-    for(j=0; j<c; ++j) {
-      result[j] = value
-    }
-  } else {
-    for(j=0; j<c; ++j) {
-      result[j] = dupe_array(count, value, i+1)
-    }
-  }
-  return result
-}
-
-function dupe_number(count, value) {
-  var result, i
-  result = new Array(count)
-  for(i=0; i<count; ++i) {
-    result[i] = value
-  }
-  return result
-}
-
-function dupe(count, value) {
-  if(typeof value === "undefined") {
-    value = 0
-  }
-  switch(typeof count) {
-    case "number":
-      if(count > 0) {
-        return dupe_number(count|0, value)
-      }
-    break
-    case "object":
-      if(typeof (count.length) === "number") {
-        return dupe_array(count, value, 0)
-      }
-    break
-  }
-  return []
-}
-
-module.exports = dupe
-},{}],56:[function(require,module,exports){
+},{"buffer":2}],61:[function(require,module,exports){
+arguments[4][10][0].apply(exports,arguments)
+},{"dup":10}],62:[function(require,module,exports){
 "use strict"
 
 var doubleBits = require("double-bits")
@@ -8174,7 +8581,7 @@ function nextafter(x, y) {
   }
   return doubleBits.pack(lo, hi)
 }
-},{"double-bits":54}],57:[function(require,module,exports){
+},{"double-bits":60}],63:[function(require,module,exports){
 var getBounds = require('bound-points')
 var unlerp = require('unlerp')
 
@@ -8207,7 +8614,7 @@ function normalizePathScale (positions, bounds) {
   }
   return positions
 }
-},{"bound-points":38,"unlerp":80}],58:[function(require,module,exports){
+},{"bound-points":44,"unlerp":86}],64:[function(require,module,exports){
 
 var π = Math.PI
 var _120 = radians(120)
@@ -8409,7 +8816,7 @@ function radians(degress){
 	return degress * (π / 180)
 }
 
-},{}],59:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 /* eslint-disable no-unused-vars */
 'use strict';
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -8450,7 +8857,7 @@ module.exports = Object.assign || function (target, source) {
 	return to;
 };
 
-},{}],60:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 
 module.exports = parse
 
@@ -8507,7 +8914,7 @@ function parseValues(args){
 	return args ? args.map(Number) : []
 }
 
-},{}],61:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 'use strict';
 module.exports = function (min, max) {
 	if (max === undefined) {
@@ -8522,7 +8929,7 @@ module.exports = function (min, max) {
 	return Math.random() * (max - min) + min;
 };
 
-},{}],62:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 'use strict'
 
 var bnadd = require('big-rat/add')
@@ -8538,7 +8945,7 @@ function add(a, b) {
   return r
 }
 
-},{"big-rat/add":19}],63:[function(require,module,exports){
+},{"big-rat/add":25}],69:[function(require,module,exports){
 'use strict'
 
 module.exports = float2rat
@@ -8553,7 +8960,7 @@ function float2rat(v) {
   return result
 }
 
-},{"big-rat":22}],64:[function(require,module,exports){
+},{"big-rat":28}],70:[function(require,module,exports){
 'use strict'
 
 var rat = require('big-rat')
@@ -8571,7 +8978,7 @@ function muls(a, x) {
   return r
 }
 
-},{"big-rat":22,"big-rat/mul":31}],65:[function(require,module,exports){
+},{"big-rat":28,"big-rat/mul":37}],71:[function(require,module,exports){
 'use strict'
 
 var bnsub = require('big-rat/sub')
@@ -8587,7 +8994,7 @@ function sub(a, b) {
   return r
 }
 
-},{"big-rat/sub":33}],66:[function(require,module,exports){
+},{"big-rat/sub":39}],72:[function(require,module,exports){
 "use strict"
 
 var twoProduct = require("two-product")
@@ -8755,7 +9162,7 @@ function generateInSphereTest() {
 }
 
 generateInSphereTest()
-},{"robust-scale":68,"robust-subtract":70,"robust-sum":71,"two-product":76}],67:[function(require,module,exports){
+},{"robust-scale":74,"robust-subtract":76,"robust-sum":77,"two-product":82}],73:[function(require,module,exports){
 "use strict"
 
 var twoProduct = require("two-product")
@@ -8946,7 +9353,7 @@ function generateOrientationProc() {
 }
 
 generateOrientationProc()
-},{"robust-scale":68,"robust-subtract":70,"robust-sum":71,"two-product":76}],68:[function(require,module,exports){
+},{"robust-scale":74,"robust-subtract":76,"robust-sum":77,"two-product":82}],74:[function(require,module,exports){
 "use strict"
 
 var twoProduct = require("two-product")
@@ -8997,7 +9404,7 @@ function scaleLinearExpansion(e, scale) {
   g.length = count
   return g
 }
-},{"two-product":76,"two-sum":77}],69:[function(require,module,exports){
+},{"two-product":82,"two-sum":83}],75:[function(require,module,exports){
 "use strict"
 
 module.exports = segmentsIntersect
@@ -9045,7 +9452,7 @@ function segmentsIntersect(a0, a1, b0, b1) {
 
   return true
 }
-},{"robust-orientation":67}],70:[function(require,module,exports){
+},{"robust-orientation":73}],76:[function(require,module,exports){
 "use strict"
 
 module.exports = robustSubtract
@@ -9202,7 +9609,7 @@ function robustSubtract(e, f) {
   g.length = count
   return g
 }
-},{}],71:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 "use strict"
 
 module.exports = linearExpansionSum
@@ -9359,7 +9766,7 @@ function linearExpansionSum(e, f) {
   g.length = count
   return g
 }
-},{}],72:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 // square distance from a point to a segment
 function getSqSegDist(p, p1, p2) {
     var x = p1[0],
@@ -9423,7 +9830,7 @@ module.exports = function simplifyDouglasPeucker(points, tolerance) {
     return simplified;
 }
 
-},{}],73:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 var simplifyRadialDist = require('./radial-distance')
 var simplifyDouglasPeucker = require('./douglas-peucker')
 
@@ -9436,7 +9843,7 @@ module.exports = function simplify(points, tolerance) {
 
 module.exports.radialDistance = simplifyRadialDist;
 module.exports.douglasPeucker = simplifyDouglasPeucker;
-},{"./douglas-peucker":72,"./radial-distance":74}],74:[function(require,module,exports){
+},{"./douglas-peucker":78,"./radial-distance":80}],80:[function(require,module,exports){
 function getSqDist(p1, p2) {
     var dx = p1[0] - p2[0],
         dy = p1[1] - p2[1];
@@ -9468,7 +9875,7 @@ module.exports = function simplifyRadialDist(points, tolerance) {
 
     return newPoints;
 }
-},{}],75:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 var bezier = require('adaptive-bezier-curve')
 var abs = require('abs-svg-path')
 var norm = require('normalize-svg-path')
@@ -9514,7 +9921,7 @@ module.exports = function contours(svg, scale) {
         paths.push(points)
     return paths
 }
-},{"abs-svg-path":16,"adaptive-bezier-curve":18,"normalize-svg-path":58,"vec2-copy":81}],76:[function(require,module,exports){
+},{"abs-svg-path":22,"adaptive-bezier-curve":24,"normalize-svg-path":64,"vec2-copy":87}],82:[function(require,module,exports){
 "use strict"
 
 module.exports = twoProduct
@@ -9548,7 +9955,7 @@ function twoProduct(a, b, result) {
 
   return [ y, x ]
 }
-},{}],77:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 "use strict"
 
 module.exports = fastTwoSum
@@ -9566,7 +9973,7 @@ function fastTwoSum(a, b, result) {
 	}
 	return [ar+br, x]
 }
-},{}],78:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 (function (global,Buffer){
 'use strict'
 
@@ -9783,7 +10190,7 @@ exports.clearCache = function clearCache() {
   }
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"bit-twiddle":36,"buffer":2,"dup":55}],79:[function(require,module,exports){
+},{"bit-twiddle":42,"buffer":2,"dup":61}],85:[function(require,module,exports){
 "use strict"; "use restrict";
 
 module.exports = UnionFind;
@@ -9846,17 +10253,17 @@ proto.link = function(x, y) {
     ++ranks[xr];
   }
 }
-},{}],80:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 module.exports = function range(min, max, value) {
   return (value - min) / (max - min)
 }
-},{}],81:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 module.exports = function vec2Copy(out, a) {
     out[0] = a[0]
     out[1] = a[1]
     return out
 }
-},{}],82:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 var inherits = require('inherits')
 
 module.exports = function(THREE) {
@@ -9910,7 +10317,7 @@ module.exports = function(THREE) {
 
     return Complex
 }
-},{"inherits":9}],83:[function(require,module,exports){
+},{"inherits":14}],89:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -9926,7 +10333,9 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],84:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
+arguments[4][84][0].apply(exports,arguments)
+},{"bit-twiddle":7,"buffer":2,"dup":84}],91:[function(require,module,exports){
 module.exports = unindex
 
 function unindex(positions, cells, out) {
@@ -9980,7 +10389,7 @@ function unindex(positions, cells, out) {
   return out
 }
 
-},{}],85:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 var window = require("global/window")
 var once = require("once")
 var parseHeaders = require('parse-headers')
@@ -10159,7 +10568,7 @@ function createXHR(options, callback) {
 
 function noop() {}
 
-},{"global/window":8,"once":13,"parse-headers":14}],86:[function(require,module,exports){
+},{"global/window":13,"once":19,"parse-headers":20}],93:[function(require,module,exports){
 module.exports = (function xmlparser() {
   //common browsers
   if (typeof window.DOMParser !== 'undefined') {

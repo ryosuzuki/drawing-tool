@@ -18,7 +18,7 @@ var objects = [];
 var material = new THREE.MeshLambertMaterial({
   color: 0xeeeeee,
   side: THREE.DoubleSide,
-  wireframe: false
+  wireframe: true
 })
 
 var mesh;
@@ -35,6 +35,55 @@ function drawSVG (complex) {
   window.geometry = geometry;
   mesh = new THREE.Mesh(geometry, material)
   scene.add(mesh);
+
+  Q.fcall(computeUniq())
+  .then(computeLaplacian())
+  .then(computeSkeleton())
+
+
+  var points = new THREE.Geometry();
+  for (var i=0; i<geometry.faces.length; i++) {
+    var face = geometry.faces[i];
+    var a = geometry.vertices[face.a]
+    var b = geometry.vertices[face.b]
+    var c = geometry.vertices[face.c]
+
+    var v = new THREE.Vector3();
+
+    var ab = v.clone().addVectors(a, b).multiplyScalar(1/2);
+    var bc = v.clone().addVectors(b, c).multiplyScalar(1/2);
+    var ca = v.clone().addVectors(c, a).multiplyScalar(1/2);
+    var abc;
+    abc = v.clone().addVectors(a, b)
+    abc = v.clone().addVectors(abc, c)
+    abc.multiplyScalar(1/3)
+
+    // points.vertices.push(ab)
+    // points.vertices.push(bc)
+    // points.vertices.push(ca)
+    points.vertices.push(abc)
+
+    var mat = new THREE.PointsMaterial( {
+      size: 0.05,
+      // transparent: true,
+      // opacity: 0.7,
+      color: 0xff0000
+    } );
+    particles = new THREE.Points(points, mat)
+    scene.add(particles)
+  }
+
+}
+
+
+function drawPoint (vec) {
+  var sphere = new THREE.SphereGeometry(0.1, 32, 32 );
+  var mesh = new THREE.Mesh(sphere, material);
+  if (pos) mesh.position.set(pos.x, pos.y, pos.z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  window.mesh = mesh;
 }
 
 function drawShape (points) {
