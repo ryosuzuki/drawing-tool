@@ -64,7 +64,7 @@ function drawSVG (complex) {
   Q.fcall(computeUniq())
   .then(computeLaplacian())
   .then(computeSkeleton())
-  .then(redraw())
+//  .then(redraw())
 }
 
 function redraw () {
