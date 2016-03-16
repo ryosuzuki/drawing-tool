@@ -9,11 +9,19 @@
 #include <math.h>
 #include <igl/cotmatrix.h>
 #include <igl/map_vertices_to_circle.h>
+
+#include <igl/arap.h>
+#include <igl/PI.h>
+#include <igl/readOFF.h>
+#include <igl/readDMAT.h>
+#include <igl/deform_skeleton.h>
+
+
+
 #include <igl/harmonic.h>
 #include <igl/boundary_loop.h>
 #include <igl/lscm.h>
 #include <igl/arap.h>
-
 
 using namespace std;
 using namespace Eigen;
@@ -25,91 +33,88 @@ MatrixXd N;
 MatrixXd V_uv;
 VectorXi bnd;
 
+MatrixXd U;
+VectorXi b;
+VectorXi S;
+
 MatrixXd initial_guess;
 SparseMatrix<double> Lp;
 
 extern "C" {
-  typedef struct {
-    int size;
-    int count;
-    int *row;
-    int *col;
-    double *val;
-  } Result_Matrix;
+  // Compute necessary information to start using an ARAP deformation
+  //
+  // Inputs:
+  //   V  #V by dim list of mesh positions
+  //   F  #F by simplex-size list of triangle|tet indices into V
+  //   dim  dimension being used at solve time. For deformation usually dim =
+  //     V.cols(), for surface parameterization V.cols() = 3 and dim = 2
+  //   b  #b list of "boundary" fixed vertex indices into V
+  // Outputs:
+  //   data  struct containing necessary precomputation
 
-  typedef struct {
-    int count;
-    int *index;
-  } Result_Index;
+  // Inputs:
+  //   bc  #b by dim list of boundary conditions
+  //   data  struct containing necessary precomputation and parameters
+  //   U  #V by dim initial guess
 
-  typedef struct {
-    double *uv;
-  } Result_Mapping;
+  int main() {
+    igl::readOFF("./decimated-knight.off", V, F);
+    igl::readDMAT("./decimated-knight-selection.dmat", S);
 
-  typedef struct {
-    double *phi;
-  } Result_Field;
+    U=V;
 
+    igl::colon<int>(0,V.rows()-1,b);
+    b.conservativeResize(stable_partition( b.data(), b.data()+b.size(),
+     [](int i)->bool{return S(i)>=0;})-b.data());
 
-  void getField(char *json, Result_Field *res) {
-    Document d;
-    d.Parse(json);
+    int dim = V.cols();
+    igl::ARAPData data;
+    data.max_iter = 100;
+    data.energy = igl::ARAP_ENERGY_TYPE_SPOKES;
+    igl::arap_precomputation(V, F, dim, b, data);
+    // cout << data << endl;
 
-    Value &uniq  = d["uniq"];
-    Value &faces = d["faces"];
-    Value &map   = d["map"];
-    V.resize(uniq.Size(), 3);
-    F.resize(faces.Size(), 3);;
+    RowVector3d mid;
+    mid = 0.5*(V.colwise().maxCoeff() + V.colwise().minCoeff());
 
-    for (SizeType i=0; i<uniq.Size(); i++) {
-      Value &vertex = uniq[i]["vertex"];
-      V(i, 0) = vertex["x"].GetDouble();
-      V(i, 1) = vertex["y"].GetDouble();
-      V(i, 2) = vertex["z"].GetDouble();
+    MatrixXd bc(b.size(), V.cols());
+    double anim_t = 0.0;
+    for(int i = 0; i<b.size(); i++) {
+      bc.row(i) = V.row(b(i));
+      switch(S(b(i)))　{
+        case 0:
+        {
+          const double r = mid(0)*0.25;
+          bc(i,0) += r*sin(0.5*anim_t*2.*igl::PI);
+          bc(i,1) -= r+r*cos(igl::PI+0.5*anim_t*2.*igl::PI);
+          break;
+        }
+        case 1:
+        {
+          const double r = mid(1)*0.15;
+          bc(i,1) += r+r*cos(igl::PI+0.15*anim_t*2.*igl::PI);
+          bc(i,2) -= r*sin(0.15*anim_t*2.*igl::PI);
+          break;
+        }
+        case 2:
+        {
+          const double r = mid(1)*0.15;
+          bc(i,2) += r+r*cos(igl::PI+0.35*anim_t*2.*igl::PI);
+          bc(i,0) += r*sin(0.35*anim_t*2.*igl::PI);
+          break;
+        }
+        default:
+          break;
+      }
     }
-    for (SizeType i=0; i<faces.Size(); i++) {
-      Value &face = faces[i];
-      int a = face["a"].GetInt();
-      int b = face["b"].GetInt();
-      int c = face["c"].GetInt();
-      F(i, 0) = map[a].GetInt();
-      F(i, 1) = map[b].GetInt();
-      F(i, 2) = map[c].GetInt();
-    }
-    cout << "Get Laplacian" << endl;
-    igl::cotmatrix(V, F, Lp);
-
-    cout << "Compute Cholesky" << endl;
-
-    double w = 1000;
-    int n = uniq.Size();
-    int p = d["p"].GetInt();
-    int q = d["q"].GetInt();
-    VectorXd b = VectorXd::Zero(n);
-    b(p) = w;
-
-    SparseMatrix<double> G(n, n);
-    G.insert(p, p) = w;
-    G.insert(q, q) = w;
-
-    Lp = Lp + G;
-    SparseLU< SparseMatrix<double> > slu(Lp);
-    slu.analyzePattern(Lp);
-    slu.factorize(Lp);
-    VectorXd phi = slu.solve(b);
-
-    // MatrixXd Ld = Lp;
-    // PartialPivLU<MatrixXd> lu(Ld);
-    // VectorXd phi = lu.solve(b);
-
-    // cout << phi << endl;
-    for (int i=0; i<n; i++) {
-      cout << phi(i) << endl;
-      res->phi[i] = phi(i);
-    }
+    igl::arap_solve(bc, data, U);
+    cout << U << endl;
+    return 0;
   }
+}
 
 
+  /*
   void getMapping(char *json, Result_Mapping *res) {
     Document d;
     d.Parse(json);
@@ -192,7 +197,6 @@ extern "C" {
       }
     }
   }
+  */
 
-
-}
 

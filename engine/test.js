@@ -4,6 +4,7 @@ var Q = require('q');
 var repl = require('repl');
 var THREE = require('three');
 var geometry = new THREE.CylinderGeometry(10, 10, 10, 30);
+var bunny = require('bunny');
 
 function startRepl (geometry) {
   var json = {

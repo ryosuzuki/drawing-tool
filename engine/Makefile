@@ -1,6 +1,7 @@
 COMPILER = g++
-CFLAGS = -dynamiclib -std=c++11 -Wno-c++11-extensions -w
-TARGET = compute.dylib
+# CFLAGS = -dynamiclib -std=c++11 -Wno-c++11-extensions -w
+CFLAGS = -std=c++11 -Wno-c++11-extensions -w
+TARGET = hoge
 SOURCES = calculate.cpp
 INCLUDE = -I./include/ \
 	-I/usr/local/opt/eigen/include/eigen3/ \
