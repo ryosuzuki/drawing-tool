@@ -147,6 +147,7 @@ window.onload = function () {
 
 
   view.onFrame = function (event) {
+    /*
     var pos = ctrack.getCurrentPosition();
 
     if (origin && pos) {
@@ -168,6 +169,8 @@ window.onload = function () {
         }
       }
     }
+    */
+
     /*
     if (leftBrow && origin && pos) {
       leftBrow.segments[0].point.y = start.y + pos[19][1] - origin[19][1];

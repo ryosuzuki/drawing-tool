@@ -14,11 +14,9 @@ $(function () {
 
 
 function init() {
-  var width = window.innerWidth / 2;
-
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(70, width / window.innerHeight, 1, 10000);
-  camera.position.set(0, 0, size*10)
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
+  camera.position.set(0, 0, size*5)
   camera.lookAt(new THREE.Vector3(0, 3, 0));
   scene.add( camera );
 
@@ -44,7 +42,7 @@ function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setClearColor(0xffffff);
   // renderer.setSize( window.innerWidth, window.innerHeight );
-  renderer.setSize( width, window.innerHeight );
+  renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.shadowMap.enabled = true;
   document.getElementById('viewport').appendChild( renderer.domElement );
 

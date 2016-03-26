@@ -34,9 +34,9 @@ function loadSVG (type) {
   for (var i=0; i<lines.length; i++) {
     scene.remove(lines[i])
   }
-  var file = '/assets/human.svg'
-  if (type == 'mickey') file = '/assets/mickey.svg'
-  if (type == 'donald') file = '/assets/donald.svg'
+  var file = '/public/assets/human.svg'
+  if (type == 'mickey') file = '/public/assets/mickey.svg'
+  if (type == 'donald') file = '/public/assets/donald.svg'
 
   loadSvg(file, function (err, svg) {
     console.log(svg)
@@ -45,7 +45,7 @@ function loadSVG (type) {
     mesh = svgMesh3d(d, {
       scale: 10,
       simplify: 0.1,
-      // randomization: 1000,
+      randomization: 1000,
     });
 
     complex = reindex(unindex(mesh.positions, mesh.cells));
@@ -61,11 +61,27 @@ function drawSVG (complex) {
   mesh = new THREE.Mesh(geometry, material)
   scene.add(mesh);
 
-  Q.fcall(computeUniq())
-  .then(computeLaplacian())
-  .then(computeSkeleton())
+  Q.fcall(computeUniq(geometry))
+  .then(createObj(geometry))
+
+
+  // Q.fcall(computeUniq())
+  // .then(computeLaplacian())
+  // .then(computeSkeleton())
 //  .then(redraw())
 }
+
+
+function createObj (geometry) {
+  var json = {
+    uniq: geometry.uniq,
+    faces: geometry.faces,
+    map: geometry.map,
+    filename: 'demo.obj'
+  }
+  socket.emit('connection', json)
+}
+
 
 function redraw () {
   scene.remove(mesh)
