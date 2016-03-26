@@ -1,7 +1,7 @@
 {
-  "name": "vizq",
-  "version": "1.0.0",
-  "description": "",
+  "name": "drawing-tool",
+  "version": "0.0.1",
+  "description": "drawing-tool",
   "main": "app.js",
   "directories": {
     "test": "test"
@@ -28,6 +28,7 @@
   "homepage": "https://github.com/ryosuzuki/three-js-example",
   "dependencies": {
     "browserify": "^11.1.0",
+    "co": "^4.6.0",
     "co-views": "^2.1.0",
     "csr-matrix": "^1.0.0",
     "draw-triangles-2d": "^1.0.0",
@@ -45,6 +46,7 @@
     "mesh-reindex": "^1.0.0",
     "numeric": "^1.2.6",
     "openscad-openjscad-translator": "0.0.7",
+    "q": "^1.4.1",
     "socket.io-client": "^1.4.5",
     "svg-mesh-3d": "^1.0.1",
     "swig": "^1.4.2",

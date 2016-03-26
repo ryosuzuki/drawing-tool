@@ -64,7 +64,6 @@ function drawSVG (complex) {
   Q.fcall(computeUniq(geometry))
   .then(createObj(geometry))
 
-
   // Q.fcall(computeUniq())
   // .then(computeLaplacian())
   // .then(computeSkeleton())
