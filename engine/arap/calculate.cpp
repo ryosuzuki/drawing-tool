@@ -45,12 +45,16 @@ extern "C" {
       bc(i, 2) = b_positions[i]["z"].GetDouble();
     }
 
-
     arap_data.max_iter = 100;
+    cout << "Start precomputation" << endl;
     igl::arap_precomputation(V, F, V.cols(), b, arap_data);
-    igl::arap_solve(bc, arap_data, U);
+    cout << "Finish precomputation" << endl;
 
-    cout << U << endl;
+    cout << "Start compute" << endl;
+    igl::arap_solve(bc, arap_data, U);
+    cout << "Finish compute" << endl;
+
+    // cout << U << endl;
     for (int i=0; i<U.rows(); i++) {
       res->positions[3*i] = U(i, 0);
       res->positions[3*i+1] = U(i, 1);

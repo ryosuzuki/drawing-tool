@@ -43,9 +43,9 @@ function loadSVG (type) {
     d = $('path', svg).attr('d');
     console.log('Start svgMesh3d')
     mesh = svgMesh3d(d, {
-      scale: 10,
-      simplify: 0.1,
-      randomization: 1000,
+      scale: 1,
+      simplify: 1,
+      randomization: 100,
     });
 
     complex = reindex(unindex(mesh.positions, mesh.cells));
@@ -105,7 +105,7 @@ function updateVertexPositions (positions) {
 }
 
 function computeArap () {
-  var b_index = [1034, 47]
+  var b_index = [map[942], map[78]]
   /*
     vertex of 47
     x: 0.6578133702278137
@@ -113,7 +113,7 @@ function computeArap () {
     z: 0
    */
   var b_positions = [
-    geometry.uniq[1034].vertex,
+    geometry.uniq[map[942]].vertex,
     new THREE.Vector3(0.8, 0.5, 0)
   ]
   var size = geometry.uniq.length
