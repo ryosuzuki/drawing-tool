@@ -9,9 +9,9 @@ var socket = io()
 
 
 $(function () {
-  init();
-  // drawObjects();
-  animate();
+  init()
+  loadSVG('mickey')
+  animate()
 });
 
 

@@ -39,12 +39,12 @@ extern "C" {
     MatrixXd bc(b.size(), V.cols());
 
     for (SizeType i=0; i<n; i++) {
-      int bi = b_index[i].GetInt();
-      b(i) = bi;
-      bc(bi, 0) = b_positions[i]["x"].GetDouble();
-      bc(bi, 1) = b_positions[i]["y"].GetDouble();
-      bc(bi, 2) = b_positions[i]["z"].GetDouble();
+      b(i) = b_index[i].GetInt();
+      bc(i, 0) = b_positions[i]["x"].GetDouble();
+      bc(i, 1) = b_positions[i]["y"].GetDouble();
+      bc(i, 2) = b_positions[i]["z"].GetDouble();
     }
+
 
     arap_data.max_iter = 100;
     igl::arap_precomputation(V, F, V.cols(), b, arap_data);

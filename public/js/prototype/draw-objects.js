@@ -60,6 +60,7 @@ function drawSVG (complex) {
   window.geometry = geometry;
   mesh = new THREE.Mesh(geometry, material)
   scene.add(mesh);
+  objects.push(mesh)
 
   Q.fcall(computeUniq(geometry))
   .then(createObj(geometry))
@@ -68,6 +69,60 @@ function drawSVG (complex) {
   // .then(computeLaplacian())
   // .then(computeSkeleton())
 //  .then(redraw())
+}
+
+
+$(function () {
+  socket.on('res-update-arap', function (result) {
+    console.log(result)
+    var positions = result.positions
+    window.positions = positions
+    updateVertexPositions(positions)
+  })
+})
+
+var nm
+function updateVertexPositions (positions) {
+  var vertices = []
+  for (var i=0; i<positions.length/3; i++) {
+    vertices[i] = new THREE.Vector3(positions[3*i], positions[3*i+1], positions[3*i+2])
+  }
+
+  var g = new THREE.Geometry()
+  for (var i=0; i<geometry.faces.length; i++) {
+    var face = geometry.faces[i]
+    var num = g.vertices.length
+    g.vertices.push(vertices[map[face.a]])
+    g.vertices.push(vertices[map[face.b]])
+    g.vertices.push(vertices[map[face.c]])
+    g.faces.push(new THREE.Face3(num, num+1, num+2))
+  }
+  scene.remove(mesh)
+  scene.remove(nm)
+  nm = new THREE.Mesh(g, material)
+  scene.add(nm)
+
+}
+
+function computeArap () {
+  var b_index = [1034, 47]
+  /*
+    vertex of 47
+    x: 0.6578133702278137
+    y: 0.7436342835426331
+    z: 0
+   */
+  var b_positions = [
+    geometry.uniq[1034].vertex,
+    new THREE.Vector3(0.8, 0.5, 0)
+  ]
+  var size = geometry.uniq.length
+  var json = {
+    size: size,
+    b_index: b_index,
+    b_positions: b_positions
+  }
+  socket.emit('update-arap', json)
 }
 
 

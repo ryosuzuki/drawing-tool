@@ -12,11 +12,11 @@ var co = require('co')
 var Q = require('q')
 var koa = require('koa.io')
 
+var arap = require('./engine/arap/index.js')
+
 var app = koa();
 var server = http.createServer(app.callback());
 var port = process.env.PORT || 3000;
-
-
 
 app.use(serve('.'));
 app.use(favicon('/assets/favicon.ico'));
@@ -55,6 +55,13 @@ app.io.route('connection', function *(next, json) {
   fs.writeFileSync('data/demo.obj', str, 'utf8')
 })
 
+app.io.route('update-arap', function *(next, json) {
+  console.log('Update ARAP')
+  var filename = __dirname + '/data/demo.obj'
+  json.filename = filename
+  var result = arap.getDeformation(json)
+  this.emit('res-update-arap', result)
+})
 
 
 function *index () {

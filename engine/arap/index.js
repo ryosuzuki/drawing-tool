@@ -9,11 +9,8 @@ arap.getDeformation = getDeformation
 
 var lib = ffi.Library(__dirname + '/compute', {
   'getDeformation':   ['void', ['string', 'pointer']],
-  'getMapping':   ['void', ['string', 'pointer']],
-  // 'getLaplacian': ['void', ['string', 'pointer', 'pointer', 'pointer', 'pointer']],
 });
 
-var int = ref.types.int;
 var double = ref.types.double;
 var DoubleArray = ArrayType(double);
 var Result = {};
@@ -30,8 +27,8 @@ function getDeformation (json) {
     positions: new DoubleArray(3*size),
   });
   lib.getDeformation(JSON.stringify(json), result.ref());
-  var  = new Array(n);
-  for (var i=0; i<n; i++) {
+  var positions = new Array(size);
+  for (var i=0; i<3*size; i++) {
     positions[i] = result.positions[i];
   }
   return { positions: positions }
