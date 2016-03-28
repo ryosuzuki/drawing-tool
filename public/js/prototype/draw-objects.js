@@ -104,7 +104,10 @@ function updateVertexPositions (positions) {
 
 }
 
+
+toggle = false
 function computeArap () {
+
   var b_index = [map[942], map[78]]
   /*
     vertex of 47
@@ -112,10 +115,23 @@ function computeArap () {
     y: 0.7436342835426331
     z: 0
    */
-  var b_positions = [
-    geometry.uniq[map[942]].vertex,
-    new THREE.Vector3(0.8, 0.5, 0)
-  ]
+
+  var b_positions
+  if (toggle) {
+    b_positions = [
+      geometry.uniq[map[942]].vertex,
+      new THREE.Vector3(0.8, 0.5, 0)
+    ]
+  } else {
+    b_positions = [
+      geometry.uniq[map[942]].vertex,
+      new THREE.Vector3(0.6578133702278137, 0.7436342835426331, 0)
+    ]
+  }
+  // var b_positions = [
+  //   geometry.uniq[map[942]].vertex,
+  //   new THREE.Vector3(0.8, 0.5, 0)
+  // ]
   var size = geometry.uniq.length
   var json = {
     size: size,
@@ -123,6 +139,9 @@ function computeArap () {
     b_positions: b_positions
   }
   socket.emit('update-arap', json)
+
+  toggle = !toggle
+
 }
 
 
