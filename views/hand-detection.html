@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+
+{% block main %}
+
+<!-- <canvas id="canvas" resize></canvas> -->
+
+  <h1>Gesture Control</h1>
+
+  <viewpoint id="viewpoint" position='0 0 5'></viewpoint>
+  <transform id="transform_a" translation="0 0 0" rotation="1 0 0 0" scale="1 1 1">
+  <transform id="transform_b" translation="0 0 0" rotation="1 0 0 0" scale="1 1 1">
+
+<div id="viewport">
+  <canvas id="canvas" resize></canvas>
+  <canvas id='canvas-video' style="position: fixed; z-index: 1001; top: 10px; right: 10px; opacity: 0.9">
+</div>
+
+
+
+
+<script src="/bower_components/js-objectdetect/js/objectdetect.js"></script>
+<script src="/bower_components/js-objectdetect/js/objectdetect.handfist.js"></script>
+<script src="/public/js/modules/smoother.js"></script>
+<script src="/public/js/modules/compatibility.js"></script>
+<script src="/public/js/modules/x3dom.js"></script>
+
+
+<script src="/public/js/modules/uniq.js"></script>
+<script src="/public/js/modules/build.js"></script>
+
+<!-- <script src="/public/js/prototype/face-detection.js"></script> -->
+<script src="/public/js/prototype/draw.js"></script>
+
+<script src="/public/js/prototype/setup.js"></script>
+<script src="/public/js/prototype/draw-objects.js"></script>
+<script src="/public/js/prototype/event.js"></script>
+<script src="/public/js/prototype/compute.js"></script>
+
+
+<script src="/public/js/examples/hand-detection.js"></script>
+
+
+
+{% endblock %}

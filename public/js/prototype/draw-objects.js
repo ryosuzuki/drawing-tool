@@ -102,11 +102,14 @@ function updateVertexPositions (positions) {
   nm = new THREE.Mesh(g, material)
   scene.add(nm)
 
+  running = false
 }
 
 
+var running = false
 toggle = false
 function computeArap () {
+  if (running) return false
 
   var b_index = [map[942], map[78]]
   /*
@@ -139,6 +142,7 @@ function computeArap () {
     b_positions: b_positions
   }
   socket.emit('update-arap', json)
+  running = true
 
   toggle = !toggle
 
