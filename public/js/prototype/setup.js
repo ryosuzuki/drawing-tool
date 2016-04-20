@@ -10,7 +10,7 @@ var socket = io()
 
 $(function () {
   init()
-  loadSVG('mickey')
+  loadSVG()
   animate()
 });
 
@@ -60,7 +60,8 @@ function init() {
   document.getElementById('viewport').appendChild(stats.domElement);
 
   document.addEventListener('mousedown', onDocumentMouseDown, false);
-  document.addEventListener('mousemove', onDocumentMouseDown, false);
+  document.addEventListener('click', onDocumentMouseClick, false);
+  document.addEventListener('mousemove', onDocumentMouseMove, false);
   document.addEventListener('mouseup', onDocumentMouseUp, false);
   document.addEventListener('touchstart', onDocumentTouchStart, false);
   window.addEventListener('resize', onWindowResize, false);

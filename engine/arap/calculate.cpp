@@ -56,7 +56,7 @@ extern "C" {
 
 
     cout << "Start precomputation" << endl;
-    arap_data.max_iter = 10;
+    arap_data.max_iter = 5;
     igl::arap_precomputation(V, F, V.cols(), b, arap_data);
 
     // igl::arap_dof_precomputation(V, F, M, G, arap_dof_data);

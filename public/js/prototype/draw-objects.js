@@ -37,6 +37,9 @@ function loadSVG (type) {
   var file = '/public/assets/human.svg'
   if (type == 'mickey') file = '/public/assets/mickey.svg'
   if (type == 'donald') file = '/public/assets/donald.svg'
+  if (type == 'sully') file = '/public/assets/sully.svg'
+
+  file = '/public/assets/sully.svg'
 
   loadSvg(file, function (err, svg) {
     console.log(svg)
@@ -108,33 +111,18 @@ function updateVertexPositions (positions) {
 
 var running = false
 toggle = false
-function computeArap () {
+function computeArap (b_positions) {
   if (running) return false
-
-  var b_index = [map[942], map[78]]
+  window.b_positions = b_positions
   /*
-    vertex of 47
-    x: 0.6578133702278137
-    y: 0.7436342835426331
-    z: 0
-   */
-
-  var b_positions
   if (toggle) {
-    b_positions = [
-      geometry.uniq[map[942]].vertex,
-      new THREE.Vector3(0.8, 0.5, 0)
-    ]
+    b_positions = b_positions_origin.map( function (p) {
+      return new THREE.Vector3(p.x + 0.4, p.y, 0)
+    })
   } else {
-    b_positions = [
-      geometry.uniq[map[942]].vertex,
-      new THREE.Vector3(0.6578133702278137, 0.7436342835426331, 0)
-    ]
+    b_positions = b_positions_origin
   }
-  // var b_positions = [
-  //   geometry.uniq[map[942]].vertex,
-  //   new THREE.Vector3(0.8, 0.5, 0)
-  // ]
+  */
   var size = geometry.uniq.length
   var json = {
     size: size,
@@ -143,9 +131,8 @@ function computeArap () {
   }
   socket.emit('update-arap', json)
   running = true
-
-  toggle = !toggle
-
+  // showPoints(b_positions)
+  // toggle = !toggle
 }
 
 
