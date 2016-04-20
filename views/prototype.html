@@ -2,8 +2,17 @@
 
 {% block main %}
 
+<script>
+  {% if (type) %}
+    window.type = {{ type }}
+  {% endif %}
+</script>
+
+
 <style>
 </style>
+
+<p id="log" style="position: absolute; bottom: -13px; left: 10px"></p>
 
 <div id="viewport">
   <canvas id="canvas" resize></canvas>

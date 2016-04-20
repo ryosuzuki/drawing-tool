@@ -31,6 +31,7 @@ app.use( function *(next) {
   yield next;
 });
 app.use(route.get('/', index));
+app.use(route.get('/prototype/:type', prototype));
 app.use(route.get('/:id', show));
 
 app.io.route('connection', function *(next, json) {
@@ -66,6 +67,9 @@ app.io.route('update-arap', function *(next, json) {
 
 function *index () {
   this.body = yield this.render('index');
+}
+function *prototype (id) {
+  this.body = yield this.render('prototype', { type: id });
 }
 function *show (id) {
   this.body = yield this.render(id);

@@ -16,7 +16,12 @@ function onDocumentMouseClick (event) {
   if (intersects.length <= 0) return false;
   console.log('click')
   console.log(current.face)
-  window.currentVertex = addSelect(current)
+  if (!window.currentVertex) {
+    window.currentVertex = addSelect(current)
+  } else {
+    window.currentVertex = undefined
+  }
+
 }
 
 var b_index = []

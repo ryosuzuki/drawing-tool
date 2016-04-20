@@ -29,17 +29,15 @@ function toggleWireframe () {
   mesh.material.needsUpdate = true
 }
 
-function loadSVG (type) {
+function loadSVG () {
   scene.remove(mesh)
   for (var i=0; i<lines.length; i++) {
     scene.remove(lines[i])
   }
-  var file = '/public/assets/human.svg'
-  if (type == 'mickey') file = '/public/assets/mickey.svg'
-  if (type == 'donald') file = '/public/assets/donald.svg'
-  if (type == 'sully') file = '/public/assets/sully.svg'
-
-  file = '/public/assets/sully.svg'
+  var file = '/public/assets/sully.svg'
+  if (window.type == 1) file = '/public/assets/mickey.svg'
+  if (window.type == 2) file = '/public/assets/donald.svg'
+  if (window.type == 3) file = '/public/assets/sully.svg'
 
   loadSvg(file, function (err, svg) {
     console.log(svg)
