@@ -30,7 +30,7 @@ void draw() {
   noStroke();
   ellipse(v1.x, v1.y, 20, 20);
 
-  server.broadcast(v1);
+  server.broadcast("" + v1 + "");
 
 
   // Let's draw the "lerped" location
